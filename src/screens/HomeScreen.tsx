@@ -7,20 +7,29 @@ import {
   CustomSection,
   CustomSectionItems,
 } from '../components/GlobalComponents';
-import {Colors} from '../constants/Constants';
+import {Colors, Screens} from '../constants/Constants';
+import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+import {
+  NavigationAction,
+  NavigationState,
+  useNavigation,
+} from '@react-navigation/native';
 
 export const HomeScreen: FC = () => {
   const sectionItems = [1, 2, 3];
 
+  const navigation = useNavigation();
+
   return (
     <CustomSafeAreaView
+      tabBarHeight={useBottomTabBarHeight()}
       containerStyle={{flex: 1}}
       contentContainerStyle={{
         justifyContent: 'flex-start',
         padding: 0,
         flex: 0,
       }}>
-      <Header />
+      <Header navigation={navigation} />
 
       <CustomSection title="Recent Assignments" link="View All">
         {sectionItems.map(sectionItem => (
@@ -28,7 +37,7 @@ export const HomeScreen: FC = () => {
             itemIcon="note"
             itemTitle="Assignment 1"
             itemSubtitle="Due Date: 12/12/2021"
-            itemStatus="In Progress"
+            itemStatus="Completed"
             itemStatusBorderRadius={20}
           />
         ))}
@@ -59,7 +68,7 @@ export const HomeScreen: FC = () => {
   );
 };
 
-const Header = () => {
+const Header: FC<{navigation: any}> = ({navigation}) => {
   const styles = StyleSheet.create({
     container: {
       alignItems: 'center',
@@ -105,7 +114,9 @@ const Header = () => {
             Welcome back to your dashboard
           </Text>
         </View>
-        <TouchableOpacity style={styles.iconContainer}>
+        <TouchableOpacity
+          style={styles.iconContainer}
+          onPress={() => navigation.navigate(Screens.Notifications as never)}>
           <MaterialIcon name="notifications" size={30} color={Colors.primary} />
         </TouchableOpacity>
       </View>

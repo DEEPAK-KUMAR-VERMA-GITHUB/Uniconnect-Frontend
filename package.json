@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
+    "@react-native-documents/picker": "^10.1.1",
+    "@react-native-documents/viewer": "^1.0.1",
     "@react-native-picker/picker": "^2.11.0",
     "@react-native-vector-icons/material-icons": "^0.0.1",
     "@react-navigation/bottom-tabs": "^7.3.2",
@@ -18,6 +20,7 @@
     "@react-navigation/native": "^7.0.17",
     "@react-navigation/native-stack": "^7.2.1",
     "axios": "^1.8.3",
+    "formik": "^2.4.6",
     "react": "19.0.0",
     "react-native": "0.78.0",
     "react-native-linear-gradient": "^2.8.3",
@@ -25,7 +28,8 @@
     "react-native-reanimated": "^3.17.1",
     "react-native-safe-area-context": "^5.3.0",
     "react-native-screens": "^4.9.2",
-    "react-native-vector-icons": "^10.2.0"
+    "react-native-vector-icons": "^10.2.0",
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

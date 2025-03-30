@@ -16,6 +16,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Picker} from '@react-native-picker/picker';
 import MultiSelect from 'react-native-multiple-select';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import {useNavigation} from '@react-navigation/native';
 
 type CustomButtonProps = {
   title: string;
@@ -48,12 +49,14 @@ type CustomButtonProps = {
   borderWidth?: number;
   borderStyle?: 'solid' | 'dotted' | 'dashed';
   alignItems?: 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'baseline';
+  disabled?: boolean;
 };
 
 const CustomButton: FC<CustomButtonProps> = ({
   title,
+  disabled = false,
   onPress,
-  color = Colors.white,
+  color = disabled ? Colors.gray : Colors.white,
   borderRadius = 10,
   width = '100%',
   padding = 12,
@@ -65,7 +68,7 @@ const CustomButton: FC<CustomButtonProps> = ({
   shadowOffset = {width: 0, height: 2},
   shadowOpacity = 0.25,
   elevation = 5,
-  backgroundColor = Colors.primary,
+  backgroundColor = disabled ? Colors.muted : Colors.primary,
   borderColor = Colors.transparent,
   borderWidth = 2,
   borderStyle = 'solid',
@@ -96,7 +99,10 @@ const CustomButton: FC<CustomButtonProps> = ({
   });
 
   return (
-    <TouchableOpacity style={buttonStyles.button} onPress={onPress}>
+    <TouchableOpacity
+      style={buttonStyles.button}
+      onPress={onPress}
+      disabled={disabled}>
       <Text style={buttonStyles.text}>{title}</Text>
     </TouchableOpacity>
   );
@@ -106,18 +112,21 @@ type CustomeSafeAreaViewProps = {
   children: ReactNode | undefined;
   containerStyle?: object;
   contentContainerStyle?: object;
+  tabBarHeight?: number;
 };
 
 const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
   children,
   containerStyle,
   contentContainerStyle,
+  tabBarHeight = 0,
 }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: Colors.light,
       ...containerStyle,
+      paddingBottom: -1 * tabBarHeight,
     },
     contentContainer: {
       flex: 1,
@@ -175,6 +184,7 @@ type CustomInputProps = {
   onleftIconClick?: () => void;
   onRightIconCLick?: () => void;
   error?: string;
+  onBlur?: (text: string) => void;
 };
 
 const CustomInput: FC<CustomInputProps> = ({
@@ -189,6 +199,7 @@ const CustomInput: FC<CustomInputProps> = ({
   onleftIconClick,
   onRightIconCLick,
   error,
+  onBlur,
 }) => {
   const styles = StyleSheet.create({
     label: {
@@ -236,6 +247,7 @@ const CustomInput: FC<CustomInputProps> = ({
           onChangeText={onChangeText}
           value={value}
           keyboardType={keyboardType}
+          onBlur={() => onBlur?.(value ?? '')}
         />
         {rightIcon && (
           <MaterialIcons
@@ -466,7 +478,7 @@ const CustomSectionItems: FC<CustomSectionItemsProps> = ({
               itemStatus === 'Pending'
                 ? Colors.primary
                 : itemStatus === 'Completed'
-                ? Colors.success
+                ? Colors.green
                 : itemStatus === 'In Progress'
                 ? Colors.secondary
                 : itemStatusBackgroundColor
@@ -482,6 +494,152 @@ const CustomSectionItems: FC<CustomSectionItemsProps> = ({
   );
 };
 
+type TabHeaderProps = {
+  title: string;
+  leftIcon?: string;
+  rightIcon?: string;
+  leftIconClick?: () => void;
+  rightIconClick?: () => void;
+  style?: object;
+  leftIconColor?: string;
+  rightIconColor?: string;
+  leftIconSize?: number;
+  rightIconSize?: number;
+  titleColor?: string;
+  titleSize?: number;
+  leftText?: string;
+  rightText?: string;
+  leftTextColor?: string;
+  rightTextColor?: string;
+  leftTextSize?: number;
+  rightTextSize?: number;
+  leftTextClick?: () => void;
+  rightTextClick?: () => void;
+  leftTextFontWeight?:
+    | 'bold'
+    | 'normal'
+    | '100'
+    | '200'
+    | '300'
+    | '400'
+    | '500'
+    | '600'
+    | '700'
+    | '800'
+    | '900';
+  rightTextFontWeight?:
+    | 'bold'
+    | 'normal'
+    | '100'
+    | '200'
+    | '300'
+    | '400'
+    | '500'
+    | '600'
+    | '700'
+    | '800'
+    | '900';
+};
+
+const TabHeader: FC<TabHeaderProps> = ({
+  title,
+  leftIcon = 'arrow-back',
+  rightIcon,
+  leftIconClick,
+  rightIconClick,
+  style,
+  leftIconColor = Colors.white,
+  rightIconColor = Colors.white,
+  leftIconSize = 24,
+  rightIconSize = 24,
+  titleColor = Colors.white,
+  titleSize = 20,
+  leftText,
+  rightText,
+  leftTextColor = Colors.white,
+  rightTextColor = Colors.white,
+  leftTextSize = 16,
+  rightTextSize = 16,
+  leftTextClick,
+  rightTextClick,
+  leftTextFontWeight = 'bold',
+  rightTextFontWeight = 'bold',
+  ...props
+}) => {
+  const navigation = useNavigation();
+  const styles = StyleSheet.create({
+    headerContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 20,
+      backgroundColor: Colors.primary,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: Colors.white,
+      flex: 1,
+      textAlign: 'center',
+    },
+    ...style,
+  });
+
+  return (
+    <View style={styles.headerContainer}>
+      <TouchableOpacity>
+        {leftIcon && (
+          <MaterialIcon
+            name={leftIcon}
+            size={leftIconSize}
+            color={leftIconColor}
+            onPress={leftIconClick}
+          />
+        )}
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>{title}</Text>
+
+      {rightText && (
+        <TouchableOpacity onPress={rightTextClick}>
+          <Text
+            style={{
+              color: rightTextColor,
+              fontSize: rightTextSize,
+              fontWeight: rightTextFontWeight,
+            }}>
+            {rightText}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {rightIcon && (
+        <TouchableOpacity>
+          <MaterialIcon
+            name={rightIcon}
+            size={rightIconSize}
+            color={rightIconColor}
+            onPress={rightIconClick}
+          />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+const Divider: FC = () => {
+  return (
+    <View
+      style={{
+        width: '100%',
+        height: 1.7,
+        backgroundColor: Colors.lightGray,
+        marginVertical: 5,
+      }}
+    />
+  );
+};
+
 export {
   CustomButton,
   CustomInput,
@@ -491,4 +649,6 @@ export {
   CustomMultiSelecter,
   CustomSection,
   CustomSectionItems,
+  TabHeader,
+  Divider,
 };

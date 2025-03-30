@@ -14,6 +14,24 @@ export const Colors = Object.freeze({
   current: 'currentColor',
   green: '#09b12d',
   gray: '#aaa',
+  lightGray: '#e5e5e5',
+
+  
+  darkPrimary: '#001f4d',
+  darkSecondary: '#FF6600',
+  darkSuccess: '#228B22',
+  darkDanger: '#8B0000',
+  darkWarning: '#FFA500',
+  darkInfo: '#1E90FF',
+  darkLight: '#d9d9d9',
+  darkMuted: '#808080',
+  darkWhite: '#f2f2f2',
+  darkBlack: '#666666',
+  darkTransparent: 'rgba(0, 0, 0, 0.5)',
+  darkCurrent: 'currentColor',
+  darkGreen: '#008000',
+  darkGray: '#808080',
+  darkLightGray: '#d3d3d3',
 });
 
 export const Screens = Object.freeze({
@@ -24,4 +42,10 @@ export const Screens = Object.freeze({
   StudentRegister: 'StudentRegisterScreen',
   FacultyRegister: 'FacultyRegisterScreen',
   Home: 'Home',
+  Notes: 'Notes',
+  PYQs: 'PYQs',
+  Assignments: 'Assignments',
+  Profile: 'Profile',
+  Notifications: 'Notifications',
+  AssignmentSubmit: 'AssignmentSubmitScreen',
 });
