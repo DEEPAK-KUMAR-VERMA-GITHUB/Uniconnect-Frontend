@@ -1,7 +1,7 @@
-import { FC } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {FC} from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { Colors } from '../constants/Constants';
+import {Colors} from '../constants/Constants';
 
 type BottomTabBarProps = {
   state: any;
@@ -9,32 +9,37 @@ type BottomTabBarProps = {
   navigation: any;
 };
 
-const tabs = [
+const tabs: Array<{name: string; icon: string; index: number}> = [
   {
     name: 'Home',
     icon: 'home',
+    index: 0,
   },
   {
     name: 'Notes',
     icon: 'note',
+    index: 1,
   },
   {
     name: 'Notifications',
     icon: 'notifications',
+    index: 2,
   },
 
   {
     name: 'PYQs',
     icon: 'book',
+    index: 3,
   },
   {
     name: 'Assignments',
     icon: 'assignment',
+    index: 4,
   },
-
   {
     name: 'Profile',
     icon: 'person',
+    index: 6,
   },
 ];
 
@@ -55,10 +60,10 @@ export const BottomTabBar: FC<BottomTabBarProps> = ({
 
   return (
     <View style={styles.tabBarContainer}>
-      {tabs.map((tab, index) => (
+      {tabs.map(tab => (
         <Tab
-          key={index}
-          index={index}
+          key={tab.index}
+          index={tab.index}
           navigation={navigation}
           iconColor={Colors.muted}
           activeIconColor={Colors.primary}
@@ -66,8 +71,10 @@ export const BottomTabBar: FC<BottomTabBarProps> = ({
           activeTabTextColor={Colors.primary}
           tabIcon={tab.icon}
           tabName={tab.name}
-          isActive={state.index === index}
-          onPress={() => state.index !== index && navigation.navigate(tab.name)}
+          isActive={state.index === tab.index}
+          onPress={() =>
+            state.index !== tab.index && navigation.navigate(tab.name)
+          }
         />
       ))}
     </View>

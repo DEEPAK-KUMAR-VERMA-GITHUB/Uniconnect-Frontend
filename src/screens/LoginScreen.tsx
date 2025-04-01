@@ -1,6 +1,6 @@
+import React, {FC} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import {FC} from 'react';
-import {StyleSheet, Text} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import {
   CustomButton,
   CustomInput,
@@ -10,13 +10,7 @@ import {
 import {Colors, Screens} from '../constants/Constants';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
-
-const LoginSchema = Yup.object().shape({
-  email: Yup.string().email('Invalid email').required('Required'),
-  password: Yup.string()
-    .min(8, 'Password must contain atleast 8 characters')
-    .required('Required'),
-});
+import {LoginSchema} from '../schemas/loginSchema';
 
 const styles = StyleSheet.create({
   textTitle: {
@@ -51,38 +45,45 @@ export const LoginScreen: FC = () => {
           try {
             setSubmitting(true);
             await handleLogin(values.email, values.password);
-            navigator.navigate(Screens.Home as never);
           } catch (error) {
             console.log(error);
           } finally {
             setSubmitting(false);
           }
         }}>
-        {({values, handleChange, handleBlur, handleSubmit, isSubmitting}) => (
-          <form>
+        {({
+          values,
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          isSubmitting,
+          errors,
+          isValid,
+        }) => (
+          <>
             <CustomInput
-              leftIcon="mail-outline"
-              placeholder="Email"
-              keyboardType="email-address"
+              label="Email"
+              placeholder="Enter your email"
+              value={values.email}
               onChangeText={handleChange('email')}
               onBlur={handleBlur('email')}
-              value={values.email}
+              error={errors.email}
             />
             <CustomInput
-              leftIcon="lock-outline"
-              placeholder="Password"
-              rightIcon="visibility-off"
-              secureTextEntry={true}
+              label="Password"
+              placeholder="Enter your password"
+              value={values.password}
               onChangeText={handleChange('password')}
               onBlur={handleBlur('password')}
-              value={values.password}
+              error={errors.password}
+              secureTextEntry={true}
             />
             <CustomButton
-              title="Sign In"
+              title="Login"
               onPress={handleSubmit}
-              disabled={isSubmitting}
+              disabled={!isValid || isSubmitting}
             />
-          </form>
+          </>
         )}
       </Formik>
 

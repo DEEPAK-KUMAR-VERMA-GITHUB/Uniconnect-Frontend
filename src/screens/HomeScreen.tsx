@@ -14,56 +14,122 @@ import {
   NavigationState,
   useNavigation,
 } from '@react-navigation/native';
+import {FlatList} from 'react-native';
 
 export const HomeScreen: FC = () => {
-  const sectionItems = [1, 2, 3];
+  const sections = [
+    {
+      title: 'Recent Assignments',
+      link: 'View All',
+      data: [
+        {
+          title: 'Assignment 1',
+          subtitle: 'Due Date: 12/12/2021',
+          icon: 'assignment',
+          status: 'In Progress',
+        },
+        {
+          title: 'Assignment 2',
+          subtitle: 'Due Date: 15/12/2021',
+          icon: 'assignment',
+          status: 'In Progress',
+        },
+        {
+          title: 'Assignment 3',
+          subtitle: 'Due Date: 18/12/2021',
+          icon: 'assignment',
+          status: 'In Progress',
+        },
+      ],
+    },
+    {
+      title: 'Recent Notes',
+      link: 'View All',
+      data: [
+        {
+          title: 'Note 1',
+          subtitle: 'Subject: Math',
+          icon: 'description',
+          status: 'N/A',
+        },
+        {
+          title: 'Note 2',
+          subtitle: 'Subject: Science',
+          icon: 'description',
+          status: 'N/A',
+        },
+        {
+          title: 'Note 3',
+          subtitle: 'Subject: History',
+          icon: 'description',
+          status: 'N/A',
+        },
+      ],
+    },
+    {
+      title: 'Recent PYQs',
+      link: 'View All',
+      data: [
+        {
+          title: 'PYQ 2020',
+          subtitle: 'Subject: Physics',
+          icon: 'book',
+          status: 'N/A',
+        },
+        {
+          title: 'PYQ 2019',
+          subtitle: 'Subject: Chemistry',
+          icon: 'book',
+          status: 'N/A',
+        },
+        {
+          title: 'PYQ 2018',
+          subtitle: 'Subject: Biology',
+          icon: 'book',
+          status: 'N/A',
+        },
+      ],
+    },
+  ];
 
   const navigation = useNavigation();
+
+  const renderSection = ({item}: {item: (typeof sections)[0]}) => (
+    <CustomSection title={item.title} link={item.link}>
+      <FlatList
+        data={item.data}
+        renderItem={({item: sectionItem}) => (
+          <CustomSectionItems
+            itemIcon={sectionItem.icon}
+            itemTitle={sectionItem.title}
+            itemSubtitle={sectionItem.subtitle}
+            itemStatus={sectionItem.status}
+            itemStatusBorderRadius={20}
+          />
+        )}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={{alignItems: 'center'}}
+      />
+    </CustomSection>
+  );
 
   return (
     <CustomSafeAreaView
       tabBarHeight={useBottomTabBarHeight()}
       containerStyle={{flex: 1}}
       contentContainerStyle={{
-        justifyContent: 'flex-start',
         padding: 0,
-        flex: 0,
+        alignContent: 'center',
+        alignItems: 'center',
       }}>
       <Header navigation={navigation} />
 
-      <CustomSection title="Recent Assignments" link="View All">
-        {sectionItems.map(sectionItem => (
-          <CustomSectionItems
-            itemIcon="note"
-            itemTitle="Assignment 1"
-            itemSubtitle="Due Date: 12/12/2021"
-            itemStatus="Completed"
-            itemStatusBorderRadius={20}
-          />
-        ))}
-      </CustomSection>
-      <CustomSection title="Recent Notes" link="View All">
-        {sectionItems.map(sectionItem => (
-          <CustomSectionItems
-            itemIcon="note"
-            itemTitle="Assignment 1"
-            itemSubtitle="Due Date: 12/12/2021"
-            itemStatus="In Progress"
-            itemStatusBorderRadius={20}
-          />
-        ))}
-      </CustomSection>
-      <CustomSection title="Recent PYQs" link="View All">
-        {sectionItems.map(sectionItem => (
-          <CustomSectionItems
-            itemIcon="note"
-            itemTitle="Assignment 1"
-            itemSubtitle="Due Date: 12/12/2021"
-            itemStatus="In Progress"
-            itemStatusBorderRadius={20}
-          />
-        ))}
-      </CustomSection>
+      <FlatList
+        data={sections}
+        renderItem={renderSection}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={{alignItems: 'center', gap: 5}}
+      />
     </CustomSafeAreaView>
   );
 };

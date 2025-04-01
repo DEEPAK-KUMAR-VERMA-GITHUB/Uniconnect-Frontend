@@ -1,7 +1,7 @@
-import {pick, types} from '@react-native-documents/picker';
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
-import {useNavigation} from '@react-navigation/native';
-import {FC, useState} from 'react';
+import { pick, types } from '@react-native-documents/picker';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
+import { FC, useState } from 'react';
 import {
   Image,
   StyleSheet,
@@ -18,7 +18,7 @@ import {
   Divider,
   TabHeader,
 } from '../components/GlobalComponents';
-import {Colors, Screens} from '../constants/Constants';
+import { Colors, Screens } from '../constants/Constants';
 
 export const StudentProfileScreen: FC = () => {
   const navigation = useNavigation();
@@ -143,7 +143,7 @@ export const StudentProfileScreen: FC = () => {
         </View>
         <Text style={styles.headerText}>My Profile</Text>
       </View>
-      // personal details
+      
       <View style={styles.personalDetailsContainer}>
         <View style={styles.detailItem}>
           <View style={styles.detailItemContents}>
@@ -189,7 +189,6 @@ export const StudentProfileScreen: FC = () => {
           </TouchableOpacity>
         </View>
       </View>
-      // academic details
       <View style={styles.personalDetailsContainer}>
         <Text style={styles.headerText}>Academic Information</Text>
         <View style={styles.detailItem}>

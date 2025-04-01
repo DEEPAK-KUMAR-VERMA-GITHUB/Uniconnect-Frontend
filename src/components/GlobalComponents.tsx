@@ -9,13 +9,12 @@ import {
   Platform,
 } from 'react-native';
 import {Colors} from '../constants/Constants';
-import {Dispatch, FC, ReactNode, SetStateAction} from 'react';
+import React, {Dispatch, FC, ReactNode, SetStateAction} from 'react';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {TextInput} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Picker} from '@react-native-picker/picker';
 import MultiSelect from 'react-native-multiple-select';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 
 type CustomButtonProps = {
@@ -113,6 +112,7 @@ type CustomeSafeAreaViewProps = {
   containerStyle?: object;
   contentContainerStyle?: object;
   tabBarHeight?: number;
+  isScrollable?: boolean;
 };
 
 const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
@@ -120,6 +120,7 @@ const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
   containerStyle,
   contentContainerStyle,
   tabBarHeight = 0,
+  isScrollable = true,
 }) => {
   const styles = StyleSheet.create({
     container: {
@@ -142,12 +143,16 @@ const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{flex: 1}}>
-        <ScrollView
-          contentContainerStyle={styles.contentContainer}
-          bounces={false}
-          showsVerticalScrollIndicator={false}>
-          {children}
-        </ScrollView>
+        {isScrollable ? (
+          <ScrollView
+            contentContainerStyle={styles.contentContainer}
+            bounces={false}
+            showsVerticalScrollIndicator={false}>
+            {children}
+          </ScrollView>
+        ) : (
+          <>{children}</>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -185,12 +190,13 @@ type CustomInputProps = {
   onRightIconCLick?: () => void;
   error?: string;
   onBlur?: (text: string) => void;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 };
 
 const CustomInput: FC<CustomInputProps> = ({
   label,
   placeholder,
-  secureTextEntry,
+  secureTextEntry = false,
   leftIcon,
   rightIcon,
   onChangeText,
@@ -200,6 +206,7 @@ const CustomInput: FC<CustomInputProps> = ({
   onRightIconCLick,
   error,
   onBlur,
+  autoCapitalize = 'words',
 }) => {
   const styles = StyleSheet.create({
     label: {
@@ -241,6 +248,7 @@ const CustomInput: FC<CustomInputProps> = ({
           />
         )}
         <TextInput
+          autoCapitalize={autoCapitalize}
           style={styles.textInput}
           placeholder={placeholder}
           secureTextEntry={secureTextEntry}
@@ -268,6 +276,7 @@ type CustomPickerProps = {
   selectedItem: string;
   setSelectedItem: Dispatch<SetStateAction<string>>;
   itemsList: Array<{label: string; value: string}>;
+  onValueChange: (itemValue: string, itemIndex: number) => void;
 };
 
 const CustomPicker: FC<CustomPickerProps> = ({
@@ -275,6 +284,7 @@ const CustomPicker: FC<CustomPickerProps> = ({
   selectedItem,
   setSelectedItem,
   itemsList,
+  onValueChange,
 }) => {
   const styles = StyleSheet.create({
     container: {
@@ -300,7 +310,7 @@ const CustomPicker: FC<CustomPickerProps> = ({
     <View style={styles.container}>
       <Text style={styles.labelStyle}>{label}</Text>
       <View style={styles.selectBox}>
-        <Picker selectedValue={selectedItem} onValueChange={setSelectedItem}>
+        <Picker selectedValue={selectedItem} onValueChange={onValueChange}>
           {itemsList.map((item, index) => (
             <Picker.Item key={index} label={item.label} value={item.value} />
           ))}
@@ -354,8 +364,8 @@ const CustomMultiSelecter: FC<CustomMultiSelectProps> = ({
   return (
     <MultiSelect
       items={items}
-      uniqueKey="label"
-      displayKey="value"
+      uniqueKey={uniqueKey}
+      displayKey={displayKey}
       onSelectedItemsChange={onSelectedItemsChange}
       selectedItems={selectedItems}
       selectText={selectText}
@@ -364,8 +374,8 @@ const CustomMultiSelecter: FC<CustomMultiSelectProps> = ({
       selectedItemTextColor={selectedItemTextColor}
       submitButtonText={submitButtonText}
       submitButtonColor={submitButtonColor}
-      hideSubmitButton={false}
-      fixedHeight={true}
+      hideSubmitButton={hideSubmitButton}
+      fixedHeight={fixedHeight}
       noItemsText={noItemsText}
       styleMainWrapper={styleMainWrapper}
       {...props}
@@ -426,7 +436,7 @@ type CustomSectionItemsProps = {
   itemIcon: string;
   itemTitle: string;
   itemSubtitle?: string;
-  itemStatus?: 'Pending' | 'Completed' | 'In Progress';
+  itemStatus?: 'Pending' | 'Completed' | 'In Progress' | 'N/A' | string;
   itemStatusTextColor?: string;
   itemStatusBackgroundColor?: string;
   itemStatusBorderRadius?: number;
@@ -461,7 +471,7 @@ const CustomSectionItems: FC<CustomSectionItemsProps> = ({
     <View>
       <View style={styles.itemContainer}>
         <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-          <MaterialIcon name={itemIcon} size={30} color={iconColor} />
+          <MaterialIcons name={itemIcon} size={30} color={iconColor} />
           <View>
             <Text style={{fontSize: 18, fontWeight: 'bold'}}>
               {' '}
@@ -472,23 +482,27 @@ const CustomSectionItems: FC<CustomSectionItemsProps> = ({
             </Text>
           </View>
         </View>
-        <View
-          style={{
-            backgroundColor: `${
-              itemStatus === 'Pending'
-                ? Colors.primary
-                : itemStatus === 'Completed'
-                ? Colors.green
-                : itemStatus === 'In Progress'
-                ? Colors.secondary
-                : itemStatusBackgroundColor
-            }`,
-            paddingHorizontal: 20,
-            paddingVertical: 8,
-            borderRadius: itemStatusBorderRadius,
-          }}>
-          <Text style={{color: itemStatusTextColor}}>{itemStatus}</Text>
-        </View>
+        {itemStatus && (
+          <View
+            style={{
+              backgroundColor: `${
+                itemStatus === 'Pending'
+                  ? Colors.primary
+                  : itemStatus === 'Completed'
+                  ? Colors.green
+                  : itemStatus === 'In Progress'
+                  ? Colors.secondary
+                  : Colors.transparent
+              }`,
+              paddingHorizontal: 20,
+              paddingVertical: 8,
+              borderRadius: itemStatusBorderRadius,
+            }}>
+            {itemStatus !== 'N/A' && (
+              <Text style={{color: itemStatusTextColor}}>{itemStatus}</Text>
+            )}
+          </View>
+        )}
       </View>
     </View>
   );
@@ -590,7 +604,7 @@ const TabHeader: FC<TabHeaderProps> = ({
     <View style={styles.headerContainer}>
       <TouchableOpacity>
         {leftIcon && (
-          <MaterialIcon
+          <MaterialIcons
             name={leftIcon}
             size={leftIconSize}
             color={leftIconColor}
@@ -615,7 +629,7 @@ const TabHeader: FC<TabHeaderProps> = ({
 
       {rightIcon && (
         <TouchableOpacity>
-          <MaterialIcon
+          <MaterialIcons
             name={rightIcon}
             size={rightIconSize}
             color={rightIconColor}
