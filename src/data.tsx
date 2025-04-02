@@ -26,6 +26,14 @@ export const departments = [
   {label: 'Faculty of Information Technology And Engineering', value: 'FITE'},
 ];
 
+export const subjects = [
+  {label: 'Fake Subject 1', value: 'FS1'},
+  {label: 'Fake Subject 2', value: 'FS2'},
+  {label: 'Fake Subject 3', value: 'FS3'},
+  {label: 'Fake Subject 4', value: 'FS4'},
+  {label: 'Fake Subject 5', value: 'FS5'},
+];
+
 export const designations = [
   {
     label: 'Assistant Professor',

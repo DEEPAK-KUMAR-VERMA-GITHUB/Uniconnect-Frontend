@@ -1,13 +1,31 @@
-import {FC, ReactNode} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {CustomSafeAreaView, TabHeader} from '../components/GlobalComponents';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
-import {Colors} from '../constants/Constants';
-import {useNavigation} from '@react-navigation/native';
 import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+import {useNavigation} from '@react-navigation/native';
+import {FC, ReactNode, useState, Dispatch, SetStateAction} from 'react';
+import {Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import {
+  CustomButton,
+  CustomInput,
+  CustomPicker,
+  CustomSafeAreaView,
+  Divider,
+  TabHeader,
+  UploaderButton,
+  UploadResourceBtn,
+} from '../components/GlobalComponents';
+import {Colors} from '../constants/Constants';
+import {courses, semesters, sessions, subjects} from '../data';
+import {
+  DocumentPickerResponse,
+  pick,
+  types,
+} from '@react-native-documents/picker';
 
 export const NotesScreen: FC = () => {
   const navigation = useNavigation();
+
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+
   return (
     <CustomSafeAreaView
       tabBarHeight={useBottomTabBarHeight()}
@@ -15,7 +33,6 @@ export const NotesScreen: FC = () => {
       contentContainerStyle={{
         justifyContent: 'flex-start',
         padding: 0,
-        flex: 0,
       }}>
       <TabHeader title="My Notes" leftIconClick={() => navigation.goBack()} />
 
@@ -29,6 +46,12 @@ export const NotesScreen: FC = () => {
           icon="folder"
         />
       </NoteSection>
+
+      <UploadResourceBtn handleUploadClick={() => setModalVisible(true)} />
+      <UploadModal
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+      />
     </CustomSafeAreaView>
   );
 };
@@ -110,7 +133,7 @@ const Note: FC<NoteProps> = ({
       flexDirection: 'row',
       gap: 5,
       alignItems: 'center',
-      backgroundColor: Colors.primary,
+      backgroundColor: Colors.green,
       paddingVertical: 5,
       paddingHorizontal: 10,
       borderRadius: 5,
@@ -143,5 +166,153 @@ const Note: FC<NoteProps> = ({
         </TouchableOpacity>
       </View>
     </View>
+  );
+};
+
+type UploadModalProps = {
+  modalVisible: boolean;
+  setModalVisible: Dispatch<SetStateAction<boolean>>;
+};
+
+const UploadModal: FC<UploadModalProps> = ({modalVisible, setModalVisible}) => {
+  const [selectedCourse, setSelectedCourse] = useState<string>(
+    courses[0].value,
+  );
+  const [selectedSession, setSelectedSession] = useState<string>(
+    sessions[0].value,
+  );
+  const [selectedSemester, setSelectedSemester] = useState<string>(
+    semesters[0].value,
+  );
+  const [selectedSubject, setSelectedSubject] = useState<string>(
+    subjects[0].value,
+  );
+  const [file, setFile] = useState<DocumentPickerResponse | undefined>();
+
+  const styles = StyleSheet.create({
+    centeredView: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    modalView: {
+      backgroundColor: 'white',
+      borderRadius: 10,
+      padding: 27,
+      alignItems: 'center',
+      width: '90%',
+      gap: 10,
+    },
+  });
+
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => {
+        setModalVisible(!modalVisible);
+      }}>
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              width: '100%',
+              alignItems: 'center',
+            }}>
+            <Text style={{fontSize: 20, fontWeight: 'bold'}}>
+              Upload Course Notes
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={{
+                padding: 5,
+                borderRadius: 100,
+                backgroundColor: Colors.lightGray,
+              }}>
+              <MaterialIcon name="close" size={24} color={Colors.black} />
+            </TouchableOpacity>
+          </View>
+          <Divider />
+          <CustomInput
+            label="Note Title"
+            placeholder="Enter Note Title"
+            backgroundColor={Colors.light}
+            boxPadding={5}
+          />
+
+          <CustomPicker
+            label="Select Course"
+            selectedItem={selectedCourse}
+            setSelectedItem={setSelectedCourse}
+            itemsList={courses}
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedCourse(itemValue);
+            }}
+            backgroundColor={Colors.light}
+          />
+
+          <CustomPicker
+            label="Select Session"
+            selectedItem={selectedSession}
+            setSelectedItem={setSelectedSession}
+            itemsList={sessions}
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedSession(itemValue);
+            }}
+            backgroundColor={Colors.light}
+          />
+
+          <CustomPicker
+            label="Select Semester"
+            selectedItem={selectedSemester}
+            setSelectedItem={setSelectedSemester}
+            itemsList={semesters}
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedSemester(itemValue);
+            }}
+            backgroundColor={Colors.light}
+          />
+
+          <CustomPicker
+            label="Select Subject"
+            selectedItem={selectedSubject}
+            setSelectedItem={setSelectedSubject}
+            itemsList={subjects}
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedSubject(itemValue);
+            }}
+            backgroundColor={Colors.light}
+          />
+
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              width: '100%',
+              marginTop: 10,
+            }}>
+            <CustomButton
+              title="Cancel"
+              onPress={() => {
+                setModalVisible(false);
+              }}
+              width={'45%'}
+              backgroundColor={Colors.danger}
+            />
+
+            <UploaderButton
+              file={file}
+              setFile={setFile}
+              setModalVisible={setModalVisible}
+            />
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 };

@@ -1,21 +1,29 @@
 import {
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  DimensionValue,
-  View,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
-} from 'react-native';
-import {Colors} from '../constants/Constants';
-import React, {Dispatch, FC, ReactNode, SetStateAction} from 'react';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {TextInput} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+  DocumentPickerResponse,
+  pick,
+  types,
+} from '@react-native-documents/picker';
 import {Picker} from '@react-native-picker/picker';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
+import React, {Dispatch, FC, ReactNode, SetStateAction, useState} from 'react';
+import {
+  DimensionValue,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import MultiSelect from 'react-native-multiple-select';
-import {useNavigation} from '@react-navigation/native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {Colors} from '../constants/Constants';
+import DatePicker from 'react-native-date-picker';
 
 type CustomButtonProps = {
   title: string;
@@ -111,48 +119,50 @@ type CustomeSafeAreaViewProps = {
   children: ReactNode | undefined;
   containerStyle?: object;
   contentContainerStyle?: object;
-  tabBarHeight?: number;
-  isScrollable?: boolean;
+  tabHeader?: string;
+  navigation: Omit<NavigationProp<ReactNavigation.RootParamList>, 'jumpTo'>;
 };
 
 const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
   children,
   containerStyle,
   contentContainerStyle,
-  tabBarHeight = 0,
-  isScrollable = true,
+  tabHeader,
+  navigation,
 }) => {
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  };
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: Colors.light,
+      position: 'relative',
+      // borderWidth: 1,
       ...containerStyle,
-      paddingBottom: -1 * tabBarHeight,
     },
     contentContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 30,
-      rowGap: 20,
+      borderWidth: 1,
       ...contentContainerStyle,
     },
   });
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, containerStyle]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1}}>
-        {isScrollable ? (
-          <ScrollView
-            contentContainerStyle={styles.contentContainer}
-            bounces={false}
-            showsVerticalScrollIndicator={false}>
-            {children}
-          </ScrollView>
-        ) : (
-          <>{children}</>
+        style={[styles.contentContainer, contentContainerStyle]}>
+        {tabHeader && (
+          <TabHeader
+            title={tabHeader}
+            leftIconClick={() => navigation.goBack()}
+          />
         )}
+        {children}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -191,6 +201,10 @@ type CustomInputProps = {
   error?: string;
   onBlur?: (text: string) => void;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  backgroundColor?: string;
+  boxPadding?: number;
+  onInputFocus?: () => void;
+  editable?: boolean;
 };
 
 const CustomInput: FC<CustomInputProps> = ({
@@ -207,6 +221,10 @@ const CustomInput: FC<CustomInputProps> = ({
   error,
   onBlur,
   autoCapitalize = 'words',
+  backgroundColor = Colors.white,
+  boxPadding = 10,
+  onInputFocus,
+  editable = true,
 }) => {
   const styles = StyleSheet.create({
     label: {
@@ -220,8 +238,8 @@ const CustomInput: FC<CustomInputProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      backgroundColor: Colors.white,
-      padding: 10,
+      backgroundColor: backgroundColor,
+      padding: boxPadding,
       borderRadius: 10,
       width: '100%',
     },
@@ -256,6 +274,8 @@ const CustomInput: FC<CustomInputProps> = ({
           value={value}
           keyboardType={keyboardType}
           onBlur={() => onBlur?.(value ?? '')}
+          onFocus={onInputFocus}
+          editable={editable}
         />
         {rightIcon && (
           <MaterialIcons
@@ -271,12 +291,74 @@ const CustomInput: FC<CustomInputProps> = ({
   );
 };
 
+type CustomDatePickerProps = {
+  label?: string;
+  error?: string;
+  backgroundColor?: string;
+  boxPadding?: number;
+  onDateChange: (date: Date) => void;
+  isVisible: boolean;
+  onClose: () => void;
+  currentDate: Date;
+  minimumDate?: Date;
+  maximumDate?: Date;
+};
+
+const CustomDatePicker: FC<CustomDatePickerProps> = ({
+  label,
+  error,
+  backgroundColor = Colors.white,
+  onDateChange,
+  isVisible,
+  onClose,
+  currentDate,
+  minimumDate,
+  maximumDate,
+}) => {
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={onClose}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+        }}>
+        <View
+          style={{
+            backgroundColor: Colors.white,
+            padding: 20,
+            borderRadius: 10,
+            width: '90%',
+          }}>
+          <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15}}>
+            {label}
+          </Text>
+          <DatePicker
+            date={currentDate}
+            onDateChange={onDateChange}
+            mode="date"
+            maximumDate={maximumDate}
+            minimumDate={minimumDate}
+          />
+          <CustomButton title="OK" onPress={onClose} />
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 type CustomPickerProps = {
   label: string;
   selectedItem: string;
   setSelectedItem: Dispatch<SetStateAction<string>>;
   itemsList: Array<{label: string; value: string}>;
   onValueChange: (itemValue: string, itemIndex: number) => void;
+  backgroundColor?: string;
 };
 
 const CustomPicker: FC<CustomPickerProps> = ({
@@ -285,6 +367,7 @@ const CustomPicker: FC<CustomPickerProps> = ({
   setSelectedItem,
   itemsList,
   onValueChange,
+  backgroundColor = Colors.white,
 }) => {
   const styles = StyleSheet.create({
     container: {
@@ -294,7 +377,7 @@ const CustomPicker: FC<CustomPickerProps> = ({
       paddingHorizontal: 10,
       borderRadius: 10,
       width: '100%',
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       paddingInline: 10,
     },
     labelStyle: {
@@ -654,15 +737,100 @@ const Divider: FC = () => {
   );
 };
 
+type UploadResourceBtnProps = {
+  handleUploadClick: () => void;
+};
+
+const UploadResourceBtn: FC<UploadResourceBtnProps> = ({handleUploadClick}) => {
+  const styles = StyleSheet.create({
+    uploadResourceBtn: {
+      width: 65,
+      aspectRatio: 1,
+      borderRadius: 100,
+      backgroundColor: Colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'absolute',
+      bottom: 5,
+      right: 15,
+    },
+    uploadResourceBtnText: {
+      color: Colors.white,
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+  });
+
+  return (
+    <TouchableOpacity
+      style={styles.uploadResourceBtn}
+      onPress={handleUploadClick}>
+      <MaterialIcons name="add" size={40} color={Colors.white} />
+    </TouchableOpacity>
+  );
+};
+
+type UploaderButtonProps = {
+  file: DocumentPickerResponse | undefined;
+  setFile: Dispatch<SetStateAction<DocumentPickerResponse | undefined>>;
+  setModalVisible: Dispatch<SetStateAction<boolean>>;
+};
+
+const UploaderButton: FC<UploaderButtonProps> = ({
+  file,
+  setFile,
+  setModalVisible,
+}) => {
+  const handleChooseFile = async () => {
+    try {
+      const [pickResult] = await pick({
+        type: types.pdf,
+      });
+      setFile(pickResult);
+      console.log(pickResult);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+    console.log('File selected');
+    console.log(file);
+    setModalVisible(false);
+  };
+
+  return !file ? (
+    <CustomButton
+      title="Choose File"
+      onPress={handleChooseFile}
+      width={'45%'}
+    />
+  ) : (
+    <CustomButton
+      title="Upload"
+      onPress={handleSubmit}
+      width={'45%'}
+      backgroundColor={Colors.green}
+    />
+  );
+};
+
 export {
   CustomButton,
   CustomInput,
-  CustomSafeAreaView,
-  LinkText,
-  CustomPicker,
   CustomMultiSelecter,
+  CustomPicker,
+  CustomSafeAreaView,
   CustomSection,
   CustomSectionItems,
-  TabHeader,
   Divider,
+  LinkText,
+  TabHeader,
+  UploaderButton,
+  UploadResourceBtn,
+  CustomDatePicker,
 };

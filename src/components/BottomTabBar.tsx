@@ -54,7 +54,7 @@ export const BottomTabBar: FC<BottomTabBarProps> = ({
       justifyContent: 'space-around',
       alignItems: 'center',
       backgroundColor: 'white',
-      paddingVertical: 15,
+      paddingVertical: 20,
     },
   });
 

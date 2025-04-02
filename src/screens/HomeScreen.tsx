@@ -115,20 +115,25 @@ export const HomeScreen: FC = () => {
 
   return (
     <CustomSafeAreaView
-      tabBarHeight={useBottomTabBarHeight()}
       containerStyle={{flex: 1}}
       contentContainerStyle={{
         padding: 0,
         alignContent: 'center',
         alignItems: 'center',
-      }}>
+      }}
+      navigation={navigation as any}>
       <Header navigation={navigation} />
 
       <FlatList
         data={sections}
         renderItem={renderSection}
         keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={{alignItems: 'center', gap: 5}}
+        contentContainerStyle={{
+          alignItems: 'center',
+          gap: 5,
+          paddingBottom: 200,
+          marginTop: 10,
+        }}
       />
     </CustomSafeAreaView>
   );
