@@ -1,7 +1,15 @@
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+import {DocumentPickerResponse} from '@react-native-documents/picker';
 import {useNavigation} from '@react-navigation/native';
-import {FC, ReactNode, useState, Dispatch, SetStateAction} from 'react';
-import {Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Dispatch, FC, ReactNode, SetStateAction, useRef, useState} from 'react';
+import {
+  FlatList,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {
   CustomButton,
@@ -15,11 +23,6 @@ import {
 } from '../components/GlobalComponents';
 import {Colors} from '../constants/Constants';
 import {courses, semesters, sessions, subjects} from '../data';
-import {
-  DocumentPickerResponse,
-  pick,
-  types,
-} from '@react-native-documents/picker';
 
 export const NotesScreen: FC = () => {
   const navigation = useNavigation();
@@ -28,24 +31,36 @@ export const NotesScreen: FC = () => {
 
   return (
     <CustomSafeAreaView
-      tabBarHeight={useBottomTabBarHeight()}
-      containerStyle={{flex: 1}}
-      contentContainerStyle={{
-        justifyContent: 'flex-start',
-        padding: 0,
-      }}>
+      navigation={navigation as any}
+      contentContainerStyle={{flex: 1, gap: 10}}>
       <TabHeader title="My Notes" leftIconClick={() => navigation.goBack()} />
 
-      <NoteSection subjectTitle="Mathematics">
-        <Note
-          subjectTitle="Mathematics"
-          subjectSemester="Semester 1"
-          uploadedDate="12/09/2021"
-          facultyName="Dr. John Doe"
-          onPress={() => console.log('Download')}
-          icon="folder"
-        />
-      </NoteSection>
+      <FlatList
+        data={[
+          {
+            id: '1',
+            subjectTitle: 'Mathematics',
+            subjectSemester: 'Semester 1',
+            uploadedDate: '12/09/2021',
+            facultyName: 'Dr. John Doe',
+            onPress: () => console.log('Download'),
+            icon: 'folder',
+          },
+        ]}
+        renderItem={({item}) => (
+          <NoteSection subjectTitle={item.subjectTitle}>
+            <Note
+              subjectTitle={item.subjectTitle}
+              subjectSemester={item.subjectSemester}
+              uploadedDate={item.uploadedDate}
+              facultyName={item.facultyName}
+              onPress={item.onPress}
+              icon={item.icon}
+            />
+          </NoteSection>
+        )}
+        keyExtractor={item => item.id}
+      />
 
       <UploadResourceBtn handleUploadClick={() => setModalVisible(true)} />
       <UploadModal
@@ -65,10 +80,8 @@ const NoteSection: FC<NoteSectionProps> = ({children, subjectTitle}) => {
   return (
     <View
       style={{
-        width: '90%',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 10,
       }}>
       <Text style={{fontSize: 20, fontWeight: 'bold'}}>{subjectTitle}</Text>
       {children}
@@ -95,12 +108,13 @@ const Note: FC<NoteProps> = ({
 }) => {
   const styles = StyleSheet.create({
     noteContainer: {
-      width: '100%',
+      width: '95%',
       padding: 27,
       backgroundColor: Colors.white,
       borderRadius: 10,
       elevation: 5,
       gap: 15,
+      alignSelf: 'center',
     },
     noteHeader: {
       flexDirection: 'row',
@@ -189,6 +203,21 @@ const UploadModal: FC<UploadModalProps> = ({modalVisible, setModalVisible}) => {
   );
   const [file, setFile] = useState<DocumentPickerResponse | undefined>();
 
+  // add ref for scrollview
+  const scrollViewRef = useRef<ScrollView>(null);
+  // Add state to track currently focused input
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+
+  // Function to handle input focus
+  const handleInputFocus = (inputName: string, y: number) => {
+    setFocusedInput(inputName);
+    // Scroll to the focused input if it's below keyboard
+    scrollViewRef.current?.scrollTo({
+      y: y,
+      animated: true,
+    });
+  };
+
   const styles = StyleSheet.create({
     centeredView: {
       flex: 1,
@@ -238,79 +267,86 @@ const UploadModal: FC<UploadModalProps> = ({modalVisible, setModalVisible}) => {
             </TouchableOpacity>
           </View>
           <Divider />
-          <CustomInput
-            label="Note Title"
-            placeholder="Enter Note Title"
-            backgroundColor={Colors.light}
-            boxPadding={5}
-          />
 
-          <CustomPicker
-            label="Select Course"
-            selectedItem={selectedCourse}
-            setSelectedItem={setSelectedCourse}
-            itemsList={courses}
-            onValueChange={(itemValue, itemIndex) => {
-              setSelectedCourse(itemValue);
-            }}
-            backgroundColor={Colors.light}
-          />
-
-          <CustomPicker
-            label="Select Session"
-            selectedItem={selectedSession}
-            setSelectedItem={setSelectedSession}
-            itemsList={sessions}
-            onValueChange={(itemValue, itemIndex) => {
-              setSelectedSession(itemValue);
-            }}
-            backgroundColor={Colors.light}
-          />
-
-          <CustomPicker
-            label="Select Semester"
-            selectedItem={selectedSemester}
-            setSelectedItem={setSelectedSemester}
-            itemsList={semesters}
-            onValueChange={(itemValue, itemIndex) => {
-              setSelectedSemester(itemValue);
-            }}
-            backgroundColor={Colors.light}
-          />
-
-          <CustomPicker
-            label="Select Subject"
-            selectedItem={selectedSubject}
-            setSelectedItem={setSelectedSubject}
-            itemsList={subjects}
-            onValueChange={(itemValue, itemIndex) => {
-              setSelectedSubject(itemValue);
-            }}
-            backgroundColor={Colors.light}
-          />
-
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              width: '100%',
-              marginTop: 10,
-            }}>
-            <CustomButton
-              title="Cancel"
-              onPress={() => {
-                setModalVisible(false);
+          <ScrollView
+            ref={scrollViewRef}
+            style={{width: '100%'}}
+            showsHorizontalScrollIndicator={false}>
+            <CustomInput
+              label="Note Title"
+              placeholder="Enter Note Title"
+              backgroundColor={Colors.light}
+              boxPadding={5}
+              onInputFocus={() => handleInputFocus('title', 0)}
+              onBlur={() => setFocusedInput(null)}
+            />
+            <CustomPicker
+              label="Select Course"
+              selectedItem={selectedCourse}
+              setSelectedItem={setSelectedCourse}
+              itemsList={courses}
+              onValueChange={(itemValue, itemIndex) => {
+                setSelectedCourse(itemValue);
               }}
-              width={'45%'}
-              backgroundColor={Colors.danger}
+              backgroundColor={Colors.light}
             />
 
-            <UploaderButton
-              file={file}
-              setFile={setFile}
-              setModalVisible={setModalVisible}
+            <CustomPicker
+              label="Select Session"
+              selectedItem={selectedSession}
+              setSelectedItem={setSelectedSession}
+              itemsList={sessions}
+              onValueChange={(itemValue, itemIndex) => {
+                setSelectedSession(itemValue);
+              }}
+              backgroundColor={Colors.light}
             />
-          </View>
+
+            <CustomPicker
+              label="Select Semester"
+              selectedItem={selectedSemester}
+              setSelectedItem={setSelectedSemester}
+              itemsList={semesters}
+              onValueChange={(itemValue, itemIndex) => {
+                setSelectedSemester(itemValue);
+              }}
+              backgroundColor={Colors.light}
+            />
+
+            <CustomPicker
+              label="Select Subject"
+              selectedItem={selectedSubject}
+              setSelectedItem={setSelectedSubject}
+              itemsList={subjects}
+              onValueChange={(itemValue, itemIndex) => {
+                setSelectedSubject(itemValue);
+              }}
+              backgroundColor={Colors.light}
+            />
+
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                width: '100%',
+                marginTop: 10,
+              }}>
+              <CustomButton
+                title="Cancel"
+                onPress={() => {
+                  setModalVisible(false);
+                }}
+                width={'45%'}
+                backgroundColor={Colors.danger}
+              />
+
+              <UploaderButton
+                file={file}
+                setFile={setFile}
+                setModalVisible={setModalVisible}
+              />
+            </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>

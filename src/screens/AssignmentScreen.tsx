@@ -28,7 +28,6 @@ import {DocumentPickerResponse} from '@react-native-documents/picker';
 
 export const AssignmentScreen: FC = () => {
   const navigation = useNavigation();
-  const tabBarHeight = useBottomTabBarHeight();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const handleUpload = () => {
@@ -282,7 +281,7 @@ const UploadModal: FC<UploadModalProps> = ({modalVisible, setModalVisible}) => {
             showsHorizontalScrollIndicator={false}>
             <CustomInput
               label="Assignment Title"
-              placeholder="Enter Note Title"
+              placeholder="Enter Assignment Title"
               backgroundColor={Colors.light}
               boxPadding={5}
               onInputFocus={() => handleInputFocus('title', 0)}

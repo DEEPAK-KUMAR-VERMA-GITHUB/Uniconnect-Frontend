@@ -121,6 +121,8 @@ type CustomeSafeAreaViewProps = {
   contentContainerStyle?: object;
   tabHeader?: string;
   navigation: Omit<NavigationProp<ReactNavigation.RootParamList>, 'jumpTo'>;
+  rightText?: string;
+  rightTextClick?: () => void;
 };
 
 const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
@@ -129,6 +131,9 @@ const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
   contentContainerStyle,
   tabHeader,
   navigation,
+  rightText,
+  rightTextClick,
+  ...props
 }) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const handleRefresh = () => {
@@ -143,11 +148,9 @@ const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
       flex: 1,
       backgroundColor: Colors.light,
       position: 'relative',
-      // borderWidth: 1,
       ...containerStyle,
     },
     contentContainer: {
-      borderWidth: 1,
       ...contentContainerStyle,
     },
   });
@@ -160,6 +163,9 @@ const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
           <TabHeader
             title={tabHeader}
             leftIconClick={() => navigation.goBack()}
+            rightText={rightText}
+            rightTextClick={rightTextClick || (() => {})}
+            {...props}
           />
         )}
         {children}

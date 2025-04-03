@@ -1,6 +1,13 @@
 import {FC, useState} from 'react';
 import {CustomSafeAreaView, TabHeader} from '../components/GlobalComponents';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {Colors} from '../constants/Constants';
@@ -12,25 +19,37 @@ export const NotificationsScreen: FC = () => {
 
   return (
     <CustomSafeAreaView
-      tabBarHeight={useBottomTabBarHeight()}
-      containerStyle={{flex: 1}}
+      navigation={navigation as any}
       contentContainerStyle={{
-        justifyContent: 'flex-start',
-        padding: 0,
-        flex: 0,
-      }}>
-      <TabHeader
-        title="Notifications"
-        leftIconClick={() => navigation.goBack()}
-        rightText="Mark all as read"
-      />
-
-      <Notification
-        title="New message from Dr. Smith"
-        subtitle="Your lab results are ready to view"
-        time="2 minutes ago"
-        isRead={isRead}
-        markAsRead={() => setIsRead(true)}
+        flex: 1,
+      }}
+      tabHeader="Notifications"
+      rightText="Mark all as read"
+      rightTextClick={() => {}}>
+      <FlatList
+        data={[
+          {
+            id: 1,
+            title: 'New message from Dr. Smith',
+            subtitle: 'Your lab results are ready to view',
+            time: '2 minutes ago',
+            isRead: isRead,
+          },
+        ]}
+        renderItem={({item}) => (
+          <Notification
+            title={item.title}
+            subtitle={item.subtitle}
+            time={item.time}
+            isRead={item.isRead}
+            markAsRead={() => setIsRead(true)}
+          />
+        )}
+        contentContainerStyle={{
+          gap: 10,
+          paddingVertical: 10,
+        }}
+        keyExtractor={item => item.id.toString()}
       />
     </CustomSafeAreaView>
   );
@@ -59,6 +78,7 @@ const Notification: FC<NotificationProps> = ({
       borderBottomColor: Colors.lightGray,
       backgroundColor: isRead ? Colors.lightGray : Colors.white,
       borderRadius: 10,
+      alignSelf: 'center',
     },
     notificationContent: {
       flex: 1,
