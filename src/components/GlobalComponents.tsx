@@ -211,6 +211,8 @@ type CustomInputProps = {
   boxPadding?: number;
   onInputFocus?: () => void;
   editable?: boolean;
+  multiline?: boolean;
+  noOflines?: number;
 };
 
 const CustomInput: FC<CustomInputProps> = ({
@@ -231,6 +233,9 @@ const CustomInput: FC<CustomInputProps> = ({
   boxPadding = 10,
   onInputFocus,
   editable = true,
+  multiline = false,
+  noOflines = 1,
+  ...props
 }) => {
   const styles = StyleSheet.create({
     label: {
@@ -282,6 +287,8 @@ const CustomInput: FC<CustomInputProps> = ({
           onBlur={() => onBlur?.(value ?? '')}
           onFocus={onInputFocus}
           editable={editable}
+          multiline={multiline}
+          numberOfLines={noOflines}
         />
         {rightIcon && (
           <MaterialIcons

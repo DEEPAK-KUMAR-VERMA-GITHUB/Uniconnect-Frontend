@@ -1,17 +1,15 @@
-import {FC, useState} from 'react';
-import {CustomSafeAreaView, TabHeader} from '../components/GlobalComponents';
+import { useNavigation } from '@react-navigation/native';
+import { FC, useState } from 'react';
 import {
   FlatList,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
-import {Colors} from '../constants/Constants';
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+import { CustomSafeAreaView } from '../components/GlobalComponents';
+import { Colors } from '../constants/Constants';
 
 export const NotificationsScreen: FC = () => {
   const navigation = useNavigation();

@@ -16,7 +16,6 @@ export const Colors = Object.freeze({
   gray: '#aaa',
   lightGray: '#e5e5e5',
 
-  
   darkPrimary: '#001f4d',
   darkSecondary: '#FF6600',
   darkSuccess: '#228B22',
@@ -49,3 +48,17 @@ export const Screens = Object.freeze({
   Notifications: 'Notifications',
   AssignmentSubmit: 'AssignmentSubmitScreen',
 });
+
+export enum AdminScreens {
+  Dashboard = 'Dashboard',
+  Users = 'Users',
+  Assignments = 'Assignments',
+  Notifications = 'Notifications',
+  Settings = 'Settings',
+}
+
+export enum NotificationStates {
+  UNREAD = 'UNREAD',
+  READ = 'READ',
+  ARCHIVED = 'ARCHIVED',
+}
