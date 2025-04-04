@@ -24,6 +24,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {Colors} from '../constants/Constants';
 import DatePicker from 'react-native-date-picker';
+import {sanitizeInput} from '../utils/helper';
 
 type CustomButtonProps = {
   title: string;
@@ -264,6 +265,13 @@ const CustomInput: FC<CustomInputProps> = ({
     },
   });
 
+  const handleTextChange = (text: string) => {
+    const sanitizedText = sanitizeInput(text);
+    if (onChangeText) {
+      onChangeText(sanitizedText);
+    }
+  };
+
   return (
     <View>
       <Text style={styles.label}>{label}</Text>
@@ -281,7 +289,7 @@ const CustomInput: FC<CustomInputProps> = ({
           style={styles.textInput}
           placeholder={placeholder}
           secureTextEntry={secureTextEntry}
-          onChangeText={onChangeText}
+          onChangeText={handleTextChange}
           value={value}
           keyboardType={keyboardType}
           onBlur={() => onBlur?.(value ?? '')}
