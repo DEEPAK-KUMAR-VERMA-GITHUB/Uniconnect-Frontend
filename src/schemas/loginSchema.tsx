@@ -11,3 +11,8 @@ export const LoginSchema = Yup.object().shape({
     .min(8, 'Password must contains atleast 8 characters')
     .required('Required'),
 });
+
+export interface LoginFormValues {
+  email: string;
+  password: string;
+}

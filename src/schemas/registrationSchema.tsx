@@ -2,7 +2,7 @@ import * as Yup from 'yup';
 
 export const studentRegisterSchema = Yup.object().shape({
   fullName: Yup.string()
-    .min(4, 'Full Name must be at least 4 characters')
+    .min(2, 'Full Name must be at least 2 characters')
     .required('Full Name is required'),
   email: Yup.string()
     .matches(
@@ -34,7 +34,7 @@ export const studentRegisterSchema = Yup.object().shape({
 
 export const facultyRegisterSchema = Yup.object().shape({
   fullName: Yup.string()
-    .min(4, 'Full Name must be at least 4 characters')
+    .min(2, 'Full Name must be at least 2 characters')
     .required('Full Name is required'),
   email: Yup.string()
     .matches(

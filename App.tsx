@@ -3,7 +3,7 @@ import {SignedInNavigation, SignedOutNavigation} from './src/Navigation';
 import {AdminDashboardScreen} from './src/screens/AdminDashboardScreen';
 
 const user = {
-  role: 'admin',
+  role: 'other',
   name: 'John Doe',
   email: 'john.doe@example.com',
   profilePicture: 'https://example.com/profile.jpg',

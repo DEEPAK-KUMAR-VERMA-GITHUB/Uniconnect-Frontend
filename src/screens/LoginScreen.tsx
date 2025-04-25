@@ -1,16 +1,14 @@
-import React, {FC} from 'react';
-import {useNavigation} from '@react-navigation/native';
-import {StyleSheet, Text, View} from 'react-native';
+import {useNavigation, NavigationProp} from '@react-navigation/native';
+import {Formik} from 'formik';
+import React, {FC, useState} from 'react';
+import {KeyboardAvoidingView, Platform, StyleSheet, Text} from 'react-native';
 import {
   CustomButton,
   CustomInput,
-  CustomSafeAreaView,
   LinkText,
 } from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
-import {Formik} from 'formik';
-import * as Yup from 'yup';
-import {LoginSchema} from '../schemas/loginSchema';
+import {LoginFormValues, LoginSchema} from '../schemas/loginSchema';
 
 const styles = StyleSheet.create({
   textTitle: {
@@ -24,15 +22,29 @@ const styles = StyleSheet.create({
   },
 });
 
+type RootStackParamList = {
+  Login: undefined;
+  Option: undefined;
+};
+
 export const LoginScreen: FC = () => {
-  const navigator = useNavigation();
+  const navigator = useNavigation<NavigationProp<RootStackParamList>>();
 
   const handleLogin = async (email: string, password: string) => {
     console.log(email, password);
   };
 
   return (
-    <CustomSafeAreaView>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{
+        flex: 1,
+        backgroundColor: Colors.light,
+        justifyContent: 'center',
+        paddingHorizontal: 40,
+        alignItems: 'center',
+        gap: 20,
+      }}>
       <Text style={styles.textTitle}>Welcome Back</Text>
       <Text style={styles.textSubtitle}>
         Sign in to your account to continue
@@ -59,6 +71,7 @@ export const LoginScreen: FC = () => {
           isSubmitting,
           errors,
           isValid,
+          touched,
         }) => (
           <>
             <CustomInput
@@ -67,7 +80,8 @@ export const LoginScreen: FC = () => {
               value={values.email}
               onChangeText={handleChange('email')}
               onBlur={handleBlur('email')}
-              error={errors.email}
+              error={touched.email ? errors.email : undefined}
+              keyboardType="email-address"
             />
             <CustomInput
               label="Password"
@@ -75,12 +89,12 @@ export const LoginScreen: FC = () => {
               value={values.password}
               onChangeText={handleChange('password')}
               onBlur={handleBlur('password')}
-              error={errors.password}
+              error={touched.password ? errors.password : undefined}
               secureTextEntry={true}
             />
             <CustomButton
               title="Login"
-              onPress={handleSubmit}
+              onPress={() => handleSubmit()}
               disabled={!isValid || isSubmitting}
             />
           </>
@@ -95,6 +109,6 @@ export const LoginScreen: FC = () => {
           navigator.navigate(Screens.Option as never);
         }}
       />
-    </CustomSafeAreaView>
+    </KeyboardAvoidingView>
   );
 };

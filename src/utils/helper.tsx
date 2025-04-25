@@ -14,9 +14,10 @@ export const sanitizeInput = (input: string): string => {
 
   // remove special characters that could be used for injection
   let sanitized = input
-    .replace(/[\${}()]/g, '')
+    .replace(/[\${}()=]/g, '')
     .replace(/['"'\\]/g, '')
     .replace(/<[^>]*>/g, '')
+    .replace(/[<>]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 

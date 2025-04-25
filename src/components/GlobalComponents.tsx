@@ -223,7 +223,7 @@ const CustomInput: FC<CustomInputProps> = ({
   leftIcon,
   rightIcon,
   onChangeText,
-  value,
+  value = '',
   keyboardType,
   onleftIconClick,
   onRightIconCLick,
@@ -266,8 +266,8 @@ const CustomInput: FC<CustomInputProps> = ({
   });
 
   const handleTextChange = (text: string) => {
-    const sanitizedText = sanitizeInput(text);
     if (onChangeText) {
+      const sanitizedText = text ? sanitizeInput(text) : '';
       onChangeText(sanitizedText);
     }
   };
@@ -292,7 +292,11 @@ const CustomInput: FC<CustomInputProps> = ({
           onChangeText={handleTextChange}
           value={value}
           keyboardType={keyboardType}
-          onBlur={() => onBlur?.(value ?? '')}
+          onBlur={() => {
+            if (onBlur) {
+              onBlur(value);
+            }
+          }}
           onFocus={onInputFocus}
           editable={editable}
           multiline={multiline}
