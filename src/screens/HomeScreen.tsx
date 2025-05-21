@@ -1,5 +1,6 @@
+import {useNavigation} from '@react-navigation/native';
 import {FC} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {
@@ -8,15 +9,14 @@ import {
   CustomSectionItems,
 } from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
-import {
-  NavigationAction,
-  NavigationState,
-  useNavigation,
-} from '@react-navigation/native';
-import {FlatList} from 'react-native';
+import {useAuth, User} from '../store/contexts/AuthContext';
+import {LoadingScreen} from './LoadingScreen';
+import {useTheme} from '../store/contexts/ThemeContext';
 
 export const HomeScreen: FC = () => {
+  const {user, isLoading} = useAuth();
+  const {colors, theme, toggleTheme} = useTheme();
+
   const sections = [
     {
       title: 'Recent Assignments',
@@ -113,7 +113,9 @@ export const HomeScreen: FC = () => {
     </CustomSection>
   );
 
-  return (
+  return isLoading ? (
+    <LoadingScreen />
+  ) : (
     <CustomSafeAreaView
       containerStyle={{flex: 1}}
       contentContainerStyle={{
@@ -122,7 +124,7 @@ export const HomeScreen: FC = () => {
         alignItems: 'center',
       }}
       navigation={navigation as any}>
-      <Header navigation={navigation} />
+      <Header navigation={navigation} user={user} />
 
       <FlatList
         data={sections}
@@ -139,7 +141,11 @@ export const HomeScreen: FC = () => {
   );
 };
 
-const Header: FC<{navigation: any}> = ({navigation}) => {
+const Header: FC<{navigation: any; user: User | null}> = ({
+  navigation,
+  user,
+}) => {
+  const {colors} = useTheme();
   const styles = StyleSheet.create({
     container: {
       alignItems: 'center',
@@ -158,15 +164,15 @@ const Header: FC<{navigation: any}> = ({navigation}) => {
     textTitle: {
       fontSize: 30,
       fontWeight: 'bold',
-      color: Colors.white,
+      color: colors.text,
     },
     textSubtitle: {
       fontSize: 18,
-      color: Colors.white,
+      color: colors.text,
     },
     iconContainer: {
       padding: 10,
-      backgroundColor: Colors.white,
+      backgroundColor: colors.text,
       borderRadius: 100,
       elevation: 5,
     },
@@ -180,7 +186,9 @@ const Header: FC<{navigation: any}> = ({navigation}) => {
       style={styles.container}>
       <View style={styles.headerItemsContainer}>
         <View>
-          <Text style={styles.textTitle}>Hello, Student</Text>
+          <Text style={styles.textTitle}>
+            Hello, {user?.fullName.split(' ')[0]}
+          </Text>
           <Text style={styles.textSubtitle}>
             Welcome back to your dashboard
           </Text>

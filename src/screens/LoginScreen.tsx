@@ -1,7 +1,14 @@
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {Formik} from 'formik';
 import React, {FC, useState} from 'react';
-import {KeyboardAvoidingView, Platform, StyleSheet, Text} from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  Alert,
+  TextInput,
+} from 'react-native';
 import {
   CustomButton,
   CustomInput,
@@ -9,6 +16,8 @@ import {
 } from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
 import {LoginFormValues, LoginSchema} from '../schemas/loginSchema';
+import {useAuth} from '../store/contexts/AuthContext';
+import ToastAlert from '../components/Toast';
 
 const styles = StyleSheet.create({
   textTitle: {
@@ -29,10 +38,30 @@ type RootStackParamList = {
 
 export const LoginScreen: FC = () => {
   const navigator = useNavigation<NavigationProp<RootStackParamList>>();
+  const {login} = useAuth();
 
   const handleLogin = async (email: string, password: string) => {
-    console.log(email, password);
+    try {
+      await login(email, password);
+      // Show success message if login is successful
+      ToastAlert.success('Login successful!');
+    } catch (error: any) {
+      // Get the error message from the backend response
+      const errorMessage =
+        error.response?.data?.message ||
+        'An error occurred while trying to log in.';
+      const errorTitle = error.response?.data?.error || 'Error';
+
+      ToastAlert.error(errorTitle, errorMessage);
+      console.error('Login error:', {
+        message: errorMessage,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
   };
+
+  const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
 
   return (
     <KeyboardAvoidingView
@@ -65,32 +94,47 @@ export const LoginScreen: FC = () => {
         }}>
         {({
           values,
-          handleChange,
+          setFieldValue,
           handleBlur,
           handleSubmit,
           isSubmitting,
           errors,
           isValid,
           touched,
+          setFieldTouched,
         }) => (
           <>
             <CustomInput
               label="Email"
               placeholder="Enter your email"
               value={values.email}
-              onChangeText={handleChange('email')}
+              onChangeText={text => {
+                setFieldValue('email', text);
+                setFieldTouched('email', true);
+              }}
               onBlur={handleBlur('email')}
               error={touched.email ? errors.email : undefined}
               keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
             <CustomInput
               label="Password"
               placeholder="Enter your password"
               value={values.password}
-              onChangeText={handleChange('password')}
+              onChangeText={text => {
+                setFieldValue('password', text);
+                setFieldTouched('password', true);
+              }}
               onBlur={handleBlur('password')}
               error={touched.password ? errors.password : undefined}
-              secureTextEntry={true}
+              rightIcon={isPasswordVisible ? 'visibility' : 'visibility-off'}
+              onRightIconClick={() => {
+                setIsPasswordVisible(prev => !prev);
+              }}
+              secureTextEntry={!isPasswordVisible}
+              keyboardType="default"
+              autoCapitalize="none"
             />
             <CustomButton
               title="Login"
@@ -101,7 +145,12 @@ export const LoginScreen: FC = () => {
         )}
       </Formik>
 
-      <LinkText linkText="Forgot Password ?" onPress={() => {}} />
+      <LinkText
+        linkText="Forgot Password ?"
+        onPress={() => {
+          navigator.navigate(Screens.ForgotPassword as never);
+        }}
+      />
       <LinkText
         text="Don't have an account ?"
         linkText="Sign Up"

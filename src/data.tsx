@@ -44,7 +44,7 @@ export const designations = [
     value: 'Associate Professor',
   },
   {
-    label: 'Lecturer',
-    value: 'Lecturer',
+    label: 'Professor',
+    value: 'Professor',
   },
 ];

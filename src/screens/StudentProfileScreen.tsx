@@ -1,7 +1,6 @@
 import {pick, types} from '@react-native-documents/picker';
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
 import {useNavigation} from '@react-navigation/native';
-import {FC, useState} from 'react';
+import {FC, useEffect, useState} from 'react';
 import {
   Image,
   ScrollView,
@@ -11,17 +10,20 @@ import {
   TouchableHighlight,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {
   CustomButton,
   CustomSafeAreaView,
   Divider,
-  TabHeader,
 } from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
+import {useAuth} from '../store/contexts/AuthContext';
 
 export const StudentProfileScreen: FC = () => {
+  const {user, logout} = useAuth();
+
   const navigation = useNavigation();
 
   // states
@@ -40,6 +42,23 @@ export const StudentProfileScreen: FC = () => {
       setImageUri(decodeURI(pickResult.uri));
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Show success message
+      Alert.alert('Success', 'Logged out successfully', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate(Screens.Login as never),
+        },
+      ]);
+    } catch (error: any) {
+      // Show error message
+      const errorMessage = error.response?.data?.message || 'Failed to logout';
+      Alert.alert('Error', errorMessage, [{text: 'OK'}]);
     }
   };
 
@@ -152,7 +171,7 @@ export const StudentProfileScreen: FC = () => {
               <Text style={styles.detailItemTitle}>Full Name</Text>
               <TextInput
                 style={styles.detailItemValue}
-                value="John Doe"
+                value={user?.fullName}
                 editable={false}
               />
             </View>
@@ -166,7 +185,7 @@ export const StudentProfileScreen: FC = () => {
               <Text style={styles.detailItemTitle}>Email Address</Text>
               <TextInput
                 style={styles.detailItemValue}
-                value="johndoe@email.com"
+                value={user?.email}
                 editable={false}
                 keyboardType="email-address"
               />
@@ -181,7 +200,7 @@ export const StudentProfileScreen: FC = () => {
               <Text style={styles.detailItemTitle}>Mobile Number</Text>
               <TextInput
                 style={styles.detailItemValue}
-                value="+91 9876543210"
+                value={`+91 ${user?.phoneNumber}`}
                 editable={false}
                 keyboardType="phone-pad"
               />
@@ -207,7 +226,7 @@ export const StudentProfileScreen: FC = () => {
               <TextInput
                 style={styles.detailItemValue}
                 editable={false}
-                value="2023-2024"
+                value="2023-2025"
               />
             </View>
           </View>
@@ -251,7 +270,7 @@ export const StudentProfileScreen: FC = () => {
           />
           <CustomButton
             title="Logout"
-            onPress={() => navigation.navigate(Screens.Login as never)}
+            onPress={handleLogout}
             backgroundColor={Colors.secondary}
           />
 

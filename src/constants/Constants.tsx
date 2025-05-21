@@ -1,3 +1,4 @@
+// Constants.tsx
 export const Colors = Object.freeze({
   primary: '#00489c',
   secondary: '#FF8C00',
@@ -40,6 +41,7 @@ export const Screens = Object.freeze({
   Option: 'OptionScreen',
   StudentRegister: 'StudentRegisterScreen',
   FacultyRegister: 'FacultyRegisterScreen',
+  ForgotPassword: 'ForgotPasswordScreen',
   Home: 'Home',
   Notes: 'Notes',
   PYQs: 'PYQs',
@@ -47,6 +49,8 @@ export const Screens = Object.freeze({
   Profile: 'Profile',
   Notifications: 'Notifications',
   AssignmentSubmit: 'AssignmentSubmitScreen',
+  SubjectNotes: 'SubjectNotes',
+  PdfViewer: 'PdfViewer',
 });
 
 export enum AdminScreens {
@@ -62,3 +66,6 @@ export enum NotificationStates {
   READ = 'READ',
   ARCHIVED = 'ARCHIVED',
 }
+
+//TODO - Replace with production api url
+export const BASE_URL = 'http://10.0.2.2:8000/api/v1';

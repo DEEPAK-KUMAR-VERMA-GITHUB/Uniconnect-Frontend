@@ -1,30 +1,21 @@
 import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {FC} from 'react';
+import {FC, useEffect, useState} from 'react';
 import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {CustomSafeAreaView, TabHeader} from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
-import {RootStackParamList} from '../navigation/types';
 import {useAuth} from '../store/contexts/AuthContext';
+import {useGetUserSubjects} from '../store/apis/subjects';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 
-export const NotesScreen: FC = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const {user, isLoading} = useAuth();
-  const subjects = user?.associations.subjects;
-  console.log(user);
-
-  const handleSubjectPress = subject => {
-    navigation.navigate(Screens.SubjectNotes, {
-      subject,
-    });
-  };
+export const SubjectsScreen: FC = () => {
+  const navigation = useNavigation();
+  const {user} = useAuth();
+  const {data: subjects = [], isLoading} = useGetUserSubjects();
 
   return (
     <CustomSafeAreaView
-      navigation={navigation as any}
-      contentContainerStyle={{flex: 1, gap: 10}}>
+      contentContainerStyle={{flex: 1, gap: 10}}
+      navigation={navigation as any}>
       <TabHeader
         title="My Subjects"
         leftIconClick={() => navigation.goBack()}
@@ -34,7 +25,7 @@ export const NotesScreen: FC = () => {
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <Text>Loading subjects...</Text>
         </View>
-      ) : !subjects || subjects.length === 0 ? (
+      ) : subjects.length === 0 ? (
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <Text>No subjects found</Text>
         </View>
@@ -43,10 +34,14 @@ export const NotesScreen: FC = () => {
           data={subjects}
           renderItem={({item}) => (
             <SubjectCard
-              key={item._id}
               name={item.name}
               code={item.code}
-              onPress={() => handleSubjectPress(item)}
+              onPress={() =>
+                navigation.navigate(
+                  Screens.SubjectNotes as never,
+                  {subjectId: item._id, subjectName: item.name} as never,
+                )
+              }
             />
           )}
           keyExtractor={item => item._id}

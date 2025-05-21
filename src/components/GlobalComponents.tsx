@@ -11,19 +11,17 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import MultiSelect from 'react-native-multiple-select';
+
+import DatePicker from 'react-native-date-picker';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {Colors} from '../constants/Constants';
-import DatePicker from 'react-native-date-picker';
 import {sanitizeInput} from '../utils/helper';
 
 type CustomButtonProps = {
@@ -81,6 +79,7 @@ const CustomButton: FC<CustomButtonProps> = ({
   borderWidth = 2,
   borderStyle = 'solid',
   alignItems = 'center',
+  ...style
 }) => {
   const buttonStyles = StyleSheet.create({
     button: {
@@ -104,6 +103,7 @@ const CustomButton: FC<CustomButtonProps> = ({
       fontWeight,
       fontSize,
     },
+    ...style,
   });
 
   return (
@@ -121,7 +121,7 @@ type CustomeSafeAreaViewProps = {
   containerStyle?: object;
   contentContainerStyle?: object;
   tabHeader?: string;
-  navigation: Omit<NavigationProp<ReactNavigation.RootParamList>, 'jumpTo'>;
+  navigation?: Omit<NavigationProp<ReactNavigation.RootParamList>, 'jumpTo'>;
   rightText?: string;
   rightTextClick?: () => void;
 };
@@ -163,7 +163,7 @@ const CustomSafeAreaView: FC<CustomeSafeAreaViewProps> = ({
         {tabHeader && (
           <TabHeader
             title={tabHeader}
-            leftIconClick={() => navigation.goBack()}
+            leftIconClick={() => navigation?.goBack()}
             rightText={rightText}
             rightTextClick={rightTextClick || (() => {})}
             {...props}
@@ -204,9 +204,9 @@ type CustomInputProps = {
   value?: string;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   onleftIconClick?: () => void;
-  onRightIconCLick?: () => void;
+  onRightIconClick?: () => void;
   error?: string;
-  onBlur?: (text: string) => void;
+  onBlur?: (e: any) => void;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   backgroundColor?: string;
   boxPadding?: number;
@@ -214,19 +214,19 @@ type CustomInputProps = {
   editable?: boolean;
   multiline?: boolean;
   noOflines?: number;
+  autoCorrect?: boolean;
 };
 
 const CustomInput: FC<CustomInputProps> = ({
   label,
   placeholder,
-  secureTextEntry = false,
   leftIcon,
   rightIcon,
   onChangeText,
   value = '',
   keyboardType,
   onleftIconClick,
-  onRightIconCLick,
+  onRightIconClick,
   error,
   onBlur,
   autoCapitalize = 'words',
@@ -236,6 +236,7 @@ const CustomInput: FC<CustomInputProps> = ({
   editable = true,
   multiline = false,
   noOflines = 1,
+  secureTextEntry = false,
   ...props
 }) => {
   const styles = StyleSheet.create({
@@ -257,6 +258,7 @@ const CustomInput: FC<CustomInputProps> = ({
     },
     textInput: {
       flex: 1,
+      paddingVertical: 3,
     },
     errorText: {
       color: Colors.danger,
@@ -288,26 +290,29 @@ const CustomInput: FC<CustomInputProps> = ({
           autoCapitalize={autoCapitalize}
           style={styles.textInput}
           placeholder={placeholder}
-          secureTextEntry={secureTextEntry}
+          placeholderTextColor={Colors.muted}
           onChangeText={handleTextChange}
           value={value}
           keyboardType={keyboardType}
-          onBlur={() => {
-            if (onBlur) {
-              onBlur(value);
-            }
-          }}
+          onBlur={onBlur}
           onFocus={onInputFocus}
           editable={editable}
           multiline={multiline}
           numberOfLines={noOflines}
+          secureTextEntry={secureTextEntry}
+          passwordRules={
+            secureTextEntry
+              ? 'minlength: 8; required: lower; required: upper; required: digit;'
+              : undefined
+          }
+          {...props}
         />
         {rightIcon && (
           <MaterialIcons
             name={rightIcon}
             size={24}
             color={Colors.gray}
-            onPress={onRightIconCLick}
+            onPress={onRightIconClick}
           />
         )}
       </View>
@@ -425,69 +430,6 @@ const CustomPicker: FC<CustomPickerProps> = ({
         </Picker>
       </View>
     </View>
-  );
-};
-
-type CustomMultiSelectProps = {
-  items: Array<{label: string; value: string}>;
-  uniqueKey: string;
-  displayKey: string;
-  onSelectedItemsChange: (items: Array<{label: string; value: string}>) => void;
-  selectedItems: Array<{label: string; value: string}>;
-  selectText: string;
-  searchInputPlaceholderText: string;
-  onChangeInput: (text: string) => void;
-  selectedItemTextColor?: string;
-  submitButtonText?: string;
-  submitButtonColor?: string;
-  hideSubmitButton?: boolean;
-  fixedHeight?: boolean;
-  noItemsText: string;
-  styleMainWrapper?: object;
-};
-
-const CustomMultiSelecter: FC<CustomMultiSelectProps> = ({
-  items,
-  uniqueKey = 'label',
-  displayKey = 'label',
-  onSelectedItemsChange,
-  selectedItems,
-  selectText,
-  searchInputPlaceholderText,
-  onChangeInput,
-  selectedItemTextColor = Colors.green,
-  submitButtonText = 'Done',
-  submitButtonColor = Colors.green,
-  hideSubmitButton = false,
-  fixedHeight = false,
-  noItemsText,
-  styleMainWrapper = {
-    width: '100%',
-    padding: 10,
-    backgroundColor: Colors.white,
-    borderRadius: 10,
-  },
-  ...props
-}) => {
-  return (
-    <MultiSelect
-      items={items}
-      uniqueKey={uniqueKey}
-      displayKey={displayKey}
-      onSelectedItemsChange={onSelectedItemsChange}
-      selectedItems={selectedItems}
-      selectText={selectText}
-      searchInputPlaceholderText={searchInputPlaceholderText}
-      onChangeInput={onChangeInput}
-      selectedItemTextColor={selectedItemTextColor}
-      submitButtonText={submitButtonText}
-      submitButtonColor={submitButtonColor}
-      hideSubmitButton={hideSubmitButton}
-      fixedHeight={fixedHeight}
-      noItemsText={noItemsText}
-      styleMainWrapper={styleMainWrapper}
-      {...props}
-    />
   );
 };
 
@@ -846,8 +788,8 @@ const UploaderButton: FC<UploaderButtonProps> = ({
 
 export {
   CustomButton,
+  CustomDatePicker,
   CustomInput,
-  CustomMultiSelecter,
   CustomPicker,
   CustomSafeAreaView,
   CustomSection,
@@ -857,5 +799,4 @@ export {
   TabHeader,
   UploaderButton,
   UploadResourceBtn,
-  CustomDatePicker,
 };
