@@ -50,6 +50,7 @@ export const Screens = Object.freeze({
   Notifications: 'Notifications',
   AssignmentSubmit: 'AssignmentSubmitScreen',
   SubjectNotes: 'SubjectNotes',
+  SubjectPYQs: 'SubjectPYQsScreen',
   PdfViewer: 'PdfViewer',
 });
 

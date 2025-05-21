@@ -21,6 +21,7 @@ import {StudentRegisterScreen} from './screens/StudentRegisterScreen';
 import {SubjectNotesScreen} from './screens/SubjectNotesScreen';
 import {useAuth} from './store/contexts/AuthContext';
 import {PdfViewerScreen} from './screens/PdfViewerScreen';
+import {SubjectPYQsScreen} from './screens/SubjectPYQsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -59,6 +60,7 @@ export const SignedInNavigation: FC = () => {
         name={Screens.SubjectNotes}
         component={SubjectNotesScreen}
       />
+      <Stack.Screen name={Screens.SubjectPYQs} component={SubjectPYQsScreen} />
 
       <Stack.Screen name={Screens.PdfViewer} component={PdfViewerScreen} />
     </Tab.Navigator>

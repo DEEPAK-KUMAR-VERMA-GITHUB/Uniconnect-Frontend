@@ -104,6 +104,7 @@ export const SubjectPYQsScreen: FC = () => {
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
         subjectId={subject._id}
+        refetch={refetch}
       />
     </CustomSafeAreaView>
   );
@@ -268,12 +269,14 @@ type UploadModalProps = {
   modalVisible: boolean;
   setModalVisible: Dispatch<SetStateAction<boolean>>;
   subjectId: string;
+  refetch: any;
 };
 
 const UploadModal: FC<UploadModalProps> = ({
   modalVisible,
   setModalVisible,
   subjectId,
+  refetch,
 }) => {
   const [title, setTitle] = useState<string>('');
   const [year, setYear] = useState<string>('');
@@ -322,6 +325,7 @@ const UploadModal: FC<UploadModalProps> = ({
         },
         {
           onSuccess: () => {
+            refetch();
             setIsUploading(false);
             setModalVisible(false);
             Toast.success('PYQ uploaded successfully');
