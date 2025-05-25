@@ -1,10 +1,18 @@
 import {DocumentPickerResponse} from '@react-native-documents/picker';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {Dispatch, FC, SetStateAction, useRef, useState} from 'react';
+import {
+  Dispatch,
+  FC,
+  SetStateAction,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 import {
   Alert,
   FlatList,
   Modal,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -31,6 +39,7 @@ import {
 import Toast from '../components/Toast';
 import {downloadFile} from '../utils/fileUtils';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import {useRefresh} from '../utils/useRefresh';
 
 export const SubjectAssignmentsScreen: FC = () => {
   const navigation = useNavigation();
@@ -43,14 +52,33 @@ export const SubjectAssignmentsScreen: FC = () => {
     useState<boolean>(false);
   const {
     data: assignments,
-    isLoading,
     refetch,
-  } = useGetAssignments(subject._id);
+    isLoading,
+  } = useGetAssignments(subject._id, subject.facultyId);
+
+  console.log(assignments);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const {refreshUserProfile} = useRefresh();
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshUserProfile({showToast: false});
+      Toast.success('Profile refreshed');
+    } catch (error) {
+      Toast.error('Failed to refresh profile');
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshUserProfile]);
+
   const {mutate: deleteAssignment} = useDeleteAssignment();
 
   const handleDeleteAssignment = (assignmentId: string) => {
     deleteAssignment(
-      {assignmentId},
+      {subjectId: subject._id, assignmentId},
       {
         onSuccess: () => {
           Toast.success('Assignment deleted successfully');
@@ -103,9 +131,9 @@ export const SubjectAssignmentsScreen: FC = () => {
             <AssignmentCard
               title={item.title}
               dueDate={new Date(item.dueDate).toLocaleDateString()}
-              uploadedDate={new Date(item.createdAt).toLocaleDateString()}
+              uploadedDate={new Date(item.assignedAt).toLocaleDateString()}
               facultyName={item.assignedBy?.fullName || 'Faculty'}
-              fileUrl={item.fileUrl}
+              fileUrl={item.file}
               navigation={navigation}
               canDelete={user?.role === 'faculty'}
               canSubmit={user?.role === 'student'}
@@ -118,6 +146,14 @@ export const SubjectAssignmentsScreen: FC = () => {
           )}
           keyExtractor={item => item._id}
           contentContainerStyle={{padding: 10, gap: 10}}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
         />
       )}
 
@@ -129,6 +165,7 @@ export const SubjectAssignmentsScreen: FC = () => {
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
         subjectId={subject._id}
+        refetch={refetch}
       />
 
       {selectedAssignment && (
@@ -323,15 +360,13 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
             <TouchableOpacity
               style={[styles.actionButton, styles.viewBtn]}
               onPress={onViewSubmissions}>
-              <Text style={styles.actionText}>Submissions</Text>
-              <MaterialIcon name="list" size={20} color={Colors.white} />
+              <MaterialIcon name="list" size={20} color={Colors.black} />
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
             style={[styles.actionButton, styles.downloadBtn]}
             onPress={handleViewPdf}>
-            <Text style={styles.actionText}>View</Text>
             <MaterialIcon name="visibility" size={20} color={Colors.white} />
           </TouchableOpacity>
         </View>
@@ -344,12 +379,14 @@ type UploadModalProps = {
   modalVisible: boolean;
   setModalVisible: Dispatch<SetStateAction<boolean>>;
   subjectId: string;
+  refetch: any;
 };
 
 const UploadModal: FC<UploadModalProps> = ({
   modalVisible,
   setModalVisible,
   subjectId,
+  refetch,
 }) => {
   const [title, setTitle] = useState<string>('');
   const [file, setFile] = useState<DocumentPickerResponse | undefined>();
@@ -413,6 +450,7 @@ const UploadModal: FC<UploadModalProps> = ({
         },
         {
           onSuccess: () => {
+            refetch();
             setIsUploading(false);
             setModalVisible(false);
             Toast.success('Assignment uploaded successfully');

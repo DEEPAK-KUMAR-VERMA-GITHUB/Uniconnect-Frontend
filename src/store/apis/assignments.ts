@@ -2,15 +2,27 @@
 import {useQuery, useMutation} from '@tanstack/react-query';
 import {api} from './api';
 
-export const useGetAssignments = (subjectId: string) => {
-  return useQuery({
-    queryKey: ['assignments', subjectId],
-    queryFn: async () => {
-      const response = await api.get(`/subjects/${subjectId}/add-assignment`);
-      return response.data.data.assignments;
-    },
-    enabled: !!subjectId,
-  });
+export const useGetAssignments = (subjectId: string, facultyId?: string) => {
+  if (facultyId) {
+    return useQuery({
+      queryKey: ['assignments', subjectId, facultyId],
+      queryFn: async () => {
+        const response = await api.get(
+          `/subjects/${subjectId}/assignments?facultyId=${facultyId}`,
+        );
+        return response.data.data.assignments;
+      },
+      enabled: !!subjectId,
+    });
+  } else
+    return useQuery({
+      queryKey: ['assignments', subjectId],
+      queryFn: async () => {
+        const response = await api.get(`/subjects/${subjectId}/assignments`);
+        return response.data.data.assignments;
+      },
+      enabled: !!subjectId,
+    });
 };
 
 export const useUploadAssignment = () => {
@@ -32,8 +44,10 @@ export const useUploadAssignment = () => {
 
 export const useDeleteAssignment = () => {
   return useMutation({
-    mutationFn: async ({assignmentId}) => {
-      return api.delete(`/assignments/${assignmentId}`);
+    mutationFn: async ({subjectId, assignmentId}) => {
+      return api.delete(
+        `/subjects/${subjectId}/remove-assignment/${assignmentId}`,
+      );
     },
   });
 };

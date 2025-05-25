@@ -1,18 +1,43 @@
 // Uniconnect/src/screens/AssignmentScreen.tsx
-import {FC, useState} from 'react';
-import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {FC, useCallback, useState} from 'react';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {CustomSafeAreaView, TabHeader} from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
 import {useFacultySubjects} from '../store/apis/subjects';
 import {useAuth} from '../store/contexts/AuthContext';
+import Toast from '../components/Toast';
+import {useRefresh} from '../utils/useRefresh';
 
 export const AssignmentScreen: FC = () => {
   const navigation = useNavigation();
   const {user} = useAuth();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const {data: subjects, isLoading} = useFacultySubjects(user?._id);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const {refreshUserProfile} = useRefresh();
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshUserProfile({showToast: false});
+      Toast.success('Profile refreshed');
+    } catch (error) {
+      Toast.error('Failed to refresh profile');
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshUserProfile]);
 
   return (
     <CustomSafeAreaView
@@ -36,6 +61,14 @@ export const AssignmentScreen: FC = () => {
           )}
           keyExtractor={item => item._id}
           contentContainerStyle={{padding: 10, gap: 10}}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
         />
       )}
     </CustomSafeAreaView>

@@ -1,6 +1,14 @@
+// src/screens/HomeScreen.js with pull-to-refresh functionality
 import {useNavigation} from '@react-navigation/native';
-import {FC} from 'react';
-import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {FC, useCallback, useState} from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  RefreshControl,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {
@@ -12,10 +20,14 @@ import {Colors, Screens} from '../constants/Constants';
 import {useAuth, User} from '../store/contexts/AuthContext';
 import {LoadingScreen} from './LoadingScreen';
 import {useTheme} from '../store/contexts/ThemeContext';
+import {useRefresh} from '../utils/useRefresh';
+import Toast from '../components/Toast';
 
 export const HomeScreen: FC = () => {
   const {user, isLoading} = useAuth();
-  const {colors, theme, toggleTheme} = useTheme();
+  const {colors, theme} = useTheme();
+  const [refreshing, setRefreshing] = useState(false);
+  const {refreshAllData} = useRefresh();
 
   const sections = [
     {
@@ -94,6 +106,19 @@ export const HomeScreen: FC = () => {
 
   const navigation = useNavigation();
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshAllData({showToast: false});
+      Toast.success('Data refreshed successfully');
+    } catch (error) {
+      Toast.error('Failed to refresh data');
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshAllData]);
+
   const renderSection = ({item}: {item: (typeof sections)[0]}) => (
     <CustomSection title={item.title} link={item.link}>
       <FlatList
@@ -136,6 +161,14 @@ export const HomeScreen: FC = () => {
           paddingBottom: 200,
           marginTop: 10,
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
       />
     </CustomSafeAreaView>
   );

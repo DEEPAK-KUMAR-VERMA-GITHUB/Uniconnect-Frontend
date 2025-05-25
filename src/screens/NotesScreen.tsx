@@ -1,19 +1,43 @@
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {FC} from 'react';
-import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {FC, useCallback, useState} from 'react';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {CustomSafeAreaView, TabHeader} from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
 import {RootStackParamList} from '../navigation/types';
 import {useAuth} from '../store/contexts/AuthContext';
+import Toast from '../components/Toast';
+import {useRefresh} from '../utils/useRefresh';
 
 export const NotesScreen: FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {user, isLoading} = useAuth();
   const subjects = user?.associations.subjects;
-  console.log(user);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const {refreshUserProfile} = useRefresh();
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshUserProfile({showToast: false});
+      Toast.success('Profile refreshed');
+    } catch (error) {
+      Toast.error('Failed to refresh profile');
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshUserProfile]);
 
   const handleSubjectPress = subject => {
     navigation.navigate(Screens.SubjectNotes, {
@@ -51,6 +75,14 @@ export const NotesScreen: FC = () => {
           )}
           keyExtractor={item => item._id}
           contentContainerStyle={{padding: 10, gap: 10}}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
         />
       )}
     </CustomSafeAreaView>

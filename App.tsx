@@ -1,3 +1,4 @@
+// App.tsx (modified)
 import {QueryClientProvider} from '@tanstack/react-query';
 import React, {FC} from 'react';
 import Toast from 'react-native-toast-message';
@@ -14,6 +15,7 @@ import {
   DarkTheme,
 } from '@react-navigation/native';
 import {useTheme, ThemeProvider} from './src/store/contexts/ThemeContext';
+import {RefreshProvider} from './src/store/contexts/RefreshContext';
 
 const AppContent: FC = () => {
   const {theme, colors} = useTheme();
@@ -53,7 +55,9 @@ const App: FC = () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ThemeProvider>
-            <ThemedApp />
+            <RefreshProvider>
+              <ThemedApp />
+            </RefreshProvider>
           </ThemeProvider>
         </AuthProvider>
       </QueryClientProvider>
