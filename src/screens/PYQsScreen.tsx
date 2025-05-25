@@ -98,7 +98,7 @@ const SubjectCard: FC<SubjectCardProps> = ({subject, navigation}) => {
           Course: {subject.course?.name || 'N/A'}
         </Text>
         <Text style={styles.infoText}>
-          Semester: {subject.semester?.name || 'N/A'}
+          Semester: {subject.semester?.semesterName || 'N/A'}
         </Text>
         <Text style={styles.infoText}>
           Faculty: {subject.faculty?.fullName || 'Not Assigned'}

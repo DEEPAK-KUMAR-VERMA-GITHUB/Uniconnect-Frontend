@@ -1,6 +1,6 @@
+import { Platform } from 'react-native';
 import RNFetchBlob from 'rn-fetch-blob';
-import {Screens} from '../constants/Constants';
-import {Platform} from 'react-native';
+import { Screens } from '../constants/Constants';
 
 export const viewPdf = async (
   navigation: any,
@@ -42,27 +42,43 @@ export const downloadFile = async (
   fileName: string,
   fileExtension: string = '.pdf',
 ) => {
+  console.log('Download function called with URL:', fileUrl);
+  
   try {
     const {fs} = RNFetchBlob;
-    const fileDir = fs.dirs.CacheDir; // Using cache directory instead of Downloads
+    const fileDir = fs.dirs.CacheDir;
     const filePath = `${fileDir}/${fileName}${fileExtension}`;
-
-    const response = await RNFetchBlob.config({
+    
+    console.log('Attempting download to path:', filePath);
+    
+    const config = {
       fileCache: true,
       path: filePath,
-    }).fetch('GET', fileUrl);
-
-    if (response.info().status === 200) {
-      console.log('File downloaded successfully to cache:', filePath);
-      return {
-        success: true,
-        filePath: Platform.OS === 'ios' ? filePath : `file://${filePath}`,
-      };
-    } else {
-      throw new Error(`Download failed with status: ${response.info().status}`);
-    }
+    };
+    
+    console.log('Download config:', config);
+    
+    // Use a direct promise approach without progress tracking
+    return new Promise((resolve, reject) => {
+      RNFetchBlob.config(config)
+        .fetch('GET', fileUrl)
+        .then(response => {
+          if (response.info().status === 200) {
+            resolve({
+              success: true,
+              filePath: Platform.OS === 'ios' ? filePath : `file://${filePath}`,
+            });
+          } else {
+            reject(new Error(`Download failed with status: ${response.info().status}`));
+          }
+        })
+        .catch(error => {
+          reject(error);
+        });
+    });
   } catch (error) {
-    console.error('Error downloading file:', error);
+    console.error('Error in downloadFile:', error);
     return {success: false, error};
   }
 };
+

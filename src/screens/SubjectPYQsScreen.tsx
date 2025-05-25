@@ -383,7 +383,7 @@ const UploadModal: FC<UploadModalProps> = ({
               alignItems: 'center',
             }}>
             <Text style={{fontSize: 20, fontWeight: 'bold'}}>
-              Upload Previous Year Question Paper
+              Upload PYQ
             </Text>
             <TouchableOpacity
               onPress={() => setModalVisible(false)}

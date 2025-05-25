@@ -27,13 +27,10 @@ import {
   useGetAssignments,
   useUploadAssignment,
   useDeleteAssignment,
-  useGetAssignmentSolutions,
-  useUploadAssignmentSolution,
 } from '../store/apis/assignments';
 import Toast from '../components/Toast';
-import {assignmentUploadSchema, solutionUploadSchema} from '../schemas/assignmentSchema';
-import * as yup from 'yup';
 import {downloadFile} from '../utils/fileUtils';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export const SubjectAssignmentsScreen: FC = () => {
   const navigation = useNavigation();
@@ -41,9 +38,15 @@ export const SubjectAssignmentsScreen: FC = () => {
   const {subject} = route.params;
   const {user} = useAuth();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const {data: assignments, isLoading, refetch} = useGetAssignments(subject._id);
+  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
+  const [submissionModalVisible, setSubmissionModalVisible] =
+    useState<boolean>(false);
+  const {
+    data: assignments,
+    isLoading,
+    refetch,
+  } = useGetAssignments(subject._id);
   const {mutate: deleteAssignment} = useDeleteAssignment();
-  const isFaculty = user?.role === 'faculty';
 
   const handleDeleteAssignment = (assignmentId: string) => {
     deleteAssignment(
@@ -58,6 +61,21 @@ export const SubjectAssignmentsScreen: FC = () => {
           console.error('Delete error:', error);
         },
       },
+    );
+  };
+
+  const handleSubmitSolution = (assignment: any) => {
+    setSelectedAssignment(assignment);
+    setSubmissionModalVisible(true);
+  };
+
+  const handleViewSubmissions = (assignment: any) => {
+    navigation.navigate(
+      Screens.AssignmentSubmissions as never,
+      {
+        assignment,
+        subjectName: subject.name,
+      } as never,
     );
   };
 
@@ -89,11 +107,13 @@ export const SubjectAssignmentsScreen: FC = () => {
               facultyName={item.assignedBy?.fullName || 'Faculty'}
               fileUrl={item.fileUrl}
               navigation={navigation}
-              canDelete={isFaculty}
+              canDelete={user?.role === 'faculty'}
+              canSubmit={user?.role === 'student'}
+              canViewSubmissions={user?.role === 'faculty'}
               assignmentId={item._id}
               onDelete={() => handleDeleteAssignment(item._id)}
-              isFaculty={isFaculty}
-              subjectId={subject._id}
+              onSubmit={() => handleSubmitSolution(item)}
+              onViewSubmissions={() => handleViewSubmissions(item)}
             />
           )}
           keyExtractor={item => item._id}
@@ -101,7 +121,7 @@ export const SubjectAssignmentsScreen: FC = () => {
         />
       )}
 
-      {isFaculty && (
+      {user?.role === 'faculty' && (
         <UploadResourceBtn handleUploadClick={() => setModalVisible(true)} />
       )}
 
@@ -110,6 +130,14 @@ export const SubjectAssignmentsScreen: FC = () => {
         setModalVisible={setModalVisible}
         subjectId={subject._id}
       />
+
+      {selectedAssignment && (
+        <SubmissionModal
+          modalVisible={submissionModalVisible}
+          setModalVisible={setSubmissionModalVisible}
+          assignment={selectedAssignment}
+        />
+      )}
     </CustomSafeAreaView>
   );
 };
@@ -122,10 +150,12 @@ type AssignmentCardProps = {
   fileUrl: string;
   navigation: any;
   canDelete?: boolean;
-  assignmentId: string;
+  canSubmit?: boolean;
+  canViewSubmissions?: boolean;
+  assignmentId?: string;
   onDelete?: () => void;
-  isFaculty: boolean;
-  subjectId: string;
+  onSubmit?: () => void;
+  onViewSubmissions?: () => void;
 };
 
 const AssignmentCard: FC<AssignmentCardProps> = ({
@@ -136,14 +166,13 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
   fileUrl,
   navigation,
   canDelete,
+  canSubmit,
+  canViewSubmissions,
   assignmentId,
   onDelete,
-  isFaculty,
-  subjectId,
+  onSubmit,
+  onViewSubmissions,
 }) => {
-  const [solutionModalVisible, setSolutionModalVisible] = useState<boolean>(false);
-  const [viewSolutionsModalVisible, setViewSolutionsModalVisible] = useState<boolean>(false);
-  
   const styles = StyleSheet.create({
     container: {
       backgroundColor: Colors.white,
@@ -164,8 +193,6 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
       fontSize: 18,
       fontWeight: 'bold',
       color: Colors.dark,
-      flex: 1,
-      marginRight: 10,
     },
     icon: {
       backgroundColor: Colors.primary,
@@ -206,10 +233,10 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
     downloadBtn: {
       backgroundColor: Colors.green,
     },
-    solutionBtn: {
+    submitBtn: {
       backgroundColor: Colors.blue,
     },
-    viewSolutionsBtn: {
+    viewBtn: {
       backgroundColor: Colors.purple,
     },
     deleteBtn: {
@@ -230,27 +257,34 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
     const result = await downloadFile(fileUrl, title);
 
     if (result.success) {
-      navigation.navigate(Screens.PdfViewer, {
-        uri: result.filePath,
-        title,
-      });
+      navigation.navigate(
+        Screens.PdfViewer as never,
+        {
+          uri: result.filePath,
+          title,
+        } as never,
+      );
     } else {
       Toast.error('Failed to open document');
     }
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete Assignment', 'Are you sure you want to delete this assignment?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Delete',
-        onPress: onDelete,
-        style: 'destructive',
-      },
-    ]);
+    Alert.alert(
+      'Delete Assignment',
+      'Are you sure you want to delete this assignment?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: onDelete,
+          style: 'destructive',
+        },
+      ],
+    );
   };
 
   return (
@@ -269,49 +303,39 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
         </View>
         <View style={styles.actions}>
           {canDelete && (
-            <TouchableOpacity style={[styles.actionButton, styles.deleteBtn]} onPress={handleDelete}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteBtn]}
+              onPress={handleDelete}>
               <MaterialIcon name="delete" size={20} color={Colors.white} />
             </TouchableOpacity>
           )}
-          
-          <TouchableOpacity style={[styles.actionButton, styles.downloadBtn]} onPress={handleViewPdf}>
-            <Text style={styles.actionText}>View</Text>
-            <MaterialIcon name="visibility" size={20} color={Colors.white} />
-          </TouchableOpacity>
-          
-          {isFaculty ? (
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.viewSolutionsBtn]} 
-              onPress={() => setViewSolutionsModalVisible(true)}>
-              <Text style={styles.actionText}>Solutions</Text>
-              <MaterialIcon name="list" size={20} color={Colors.white} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.solutionBtn]} 
-              onPress={() => setSolutionModalVisible(true)}>
+
+          {canSubmit && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.submitBtn]}
+              onPress={onSubmit}>
               <Text style={styles.actionText}>Submit</Text>
               <MaterialIcon name="upload-file" size={20} color={Colors.white} />
             </TouchableOpacity>
           )}
+
+          {canViewSubmissions && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.viewBtn]}
+              onPress={onViewSubmissions}>
+              <Text style={styles.actionText}>Submissions</Text>
+              <MaterialIcon name="list" size={20} color={Colors.white} />
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.downloadBtn]}
+            onPress={handleViewPdf}>
+            <Text style={styles.actionText}>View</Text>
+            <MaterialIcon name="visibility" size={20} color={Colors.white} />
+          </TouchableOpacity>
         </View>
       </View>
-      
-      {/* Solution Upload Modal for Students */}
-      <SolutionUploadModal
-        modalVisible={solutionModalVisible}
-        setModalVisible={setSolutionModalVisible}
-        assignmentId={assignmentId}
-        subjectId={subjectId}
-      />
-      
-      {/* View Solutions Modal for Faculty */}
-      <ViewSolutionsModal
-        modalVisible={viewSolutionsModalVisible}
-        setModalVisible={setViewSolutionsModalVisible}
-        assignmentId={assignmentId}
-        assignmentTitle={title}
-      />
     </View>
   );
 };
@@ -328,48 +352,71 @@ const UploadModal: FC<UploadModalProps> = ({
   subjectId,
 }) => {
   const [title, setTitle] = useState<string>('');
-  const [dueDate, setDueDate] = useState<string>('');
   const [file, setFile] = useState<DocumentPickerResponse | undefined>();
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const {mutate: uploadAssignment} = useUploadAssignment();
+  const [dueDate, setDueDate] = useState<string>('');
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
+  // add ref for scrollview
   const scrollViewRef = useRef<ScrollView>(null);
+  // Add state to track currently focused input
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
+  // Function to handle input focus
   const handleInputFocus = (inputName: string, y: number) => {
     setFocusedInput(inputName);
+    // Scroll to the focused input if it's below keyboard
     scrollViewRef.current?.scrollTo({
       y: y,
       animated: true,
     });
   };
 
+  const handleDateChange = (event: any, date?: Date) => {
+    setShowDatePicker(false);
+    if (date && event.type !== 'dismissed') {
+      setSelectedDate(date);
+      setDueDate(date.toISOString());
+    }
+  };
+
   const handleUpload = () => {
     try {
-      // Validate form data
-      assignmentUploadSchema.validateSync({
-        title,
-        dueDate,
-        file,
-      });
+      if (!title) {
+        Alert.alert('Error', 'Please enter a title');
+        return;
+      }
+
+      if (!dueDate) {
+        Alert.alert('Error', 'Please select a due date');
+        return;
+      }
+
+      if (!file) {
+        Alert.alert('Error', 'Please select a file');
+        return;
+      }
 
       setIsUploading(true);
       uploadAssignment(
         {
           file: {
-            uri: file!.uri,
-            type: file!.type,
-            name: file!.name,
+            uri: file.uri,
+            type: file.type,
+            name: file.name,
           },
           title,
-          dueDate,
           subjectId,
+          dueDate,
         },
         {
           onSuccess: () => {
             setIsUploading(false);
             setModalVisible(false);
             Toast.success('Assignment uploaded successfully');
+            // Reset form
             setTitle('');
             setDueDate('');
             setFile(undefined);
@@ -382,11 +429,7 @@ const UploadModal: FC<UploadModalProps> = ({
         },
       );
     } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        Alert.alert('Validation Error', error.message);
-      } else {
-        Alert.alert('Error', 'An unexpected error occurred');
-      }
+      Alert.alert('Error', 'An unexpected error occurred');
     }
   };
 
@@ -422,9 +465,7 @@ const UploadModal: FC<UploadModalProps> = ({
               width: '100%',
               alignItems: 'center',
             }}>
-            <Text style={{fontSize: 20, fontWeight: 'bold'}}>
-              Upload Assignment
-            </Text>
+            <Text style={{fontSize: 20, fontWeight: 'bold'}}>Assign</Text>
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
               style={{
@@ -451,18 +492,37 @@ const UploadModal: FC<UploadModalProps> = ({
               onInputFocus={() => handleInputFocus('title', 0)}
               onBlur={() => setFocusedInput(null)}
             />
-            
-            <CustomInput
-              label="Due Date (YYYY-MM-DD)"
-              placeholder="Enter Due Date"
-              backgroundColor={Colors.light}
-              boxPadding={5}
-              value={dueDate}
-              onChangeText={setDueDate}
-              onInputFocus={() => handleInputFocus('dueDate', 60)}
-              onBlur={() => setFocusedInput(null)}
-            />
 
+            <View style={{width: '100%', marginBottom: 10}}>
+              <Text style={{marginBottom: 5, fontWeight: '500'}}>Due Date</Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: Colors.light,
+                  padding: 12,
+                  borderRadius: 5,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+                onPress={() => setShowDatePicker(true)}>
+                <Text>{dueDate || 'Select Due Date'}</Text>
+                <MaterialIcon
+                  name="calendar-today"
+                  size={20}
+                  color={Colors.gray}
+                />
+              </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                  minimumDate={new Date()}
+                />
+              )}
+            </View>
             <View
               style={{
                 flexDirection: 'row',
@@ -479,7 +539,7 @@ const UploadModal: FC<UploadModalProps> = ({
 
               {file ? (
                 <CustomButton
-                  title={isUploading ? 'Uploading...' : 'Upload Assignment'}
+                  title={isUploading ? 'Uploading...' : 'Upload'}
                   onPress={handleUpload}
                   width={'45%'}
                   disabled={isUploading}
@@ -499,62 +559,51 @@ const UploadModal: FC<UploadModalProps> = ({
   );
 };
 
-type SolutionUploadModalProps = {
+type SubmissionModalProps = {
   modalVisible: boolean;
   setModalVisible: Dispatch<SetStateAction<boolean>>;
-  assignmentId: string;
-  subjectId: string;
+  assignment: any;
 };
 
-const SolutionUploadModal: FC<SolutionUploadModalProps> = ({
+const SubmissionModal: FC<SubmissionModalProps> = ({
   modalVisible,
   setModalVisible,
-  assignmentId,
-  subjectId,
+  assignment,
 }) => {
   const [file, setFile] = useState<DocumentPickerResponse | undefined>();
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const {mutate: uploadSolution} = useUploadAssignmentSolution();
+  const {mutate: submitSolution} = useSubmitAssignmentSolution();
 
-  const handleUpload = () => {
-    try {
-      // Validate form data
-      solutionUploadSchema.validateSync({
-        file,
-      });
-
-      setIsUploading(true);
-      uploadSolution(
-        {
-          file: {
-            uri: file!.uri,
-            type: file!.type,
-            name: file!.name,
-          },
-          assignmentId,
-          subjectId,
-        },
-        {
-          onSuccess: () => {
-            setIsUploading(false);
-            setModalVisible(false);
-            Toast.success('Solution uploaded successfully');
-            setFile(undefined);
-          },
-          onError: error => {
-            setIsUploading(false);
-            Toast.error('Failed to upload solution');
-            console.error('Upload error:', error);
-          },
-        },
-      );
-    } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        Alert.alert('Validation Error', error.message);
-      } else {
-        Alert.alert('Error', 'An unexpected error occurred');
-      }
+  const handleSubmit = () => {
+    if (!file) {
+      Alert.alert('Error', 'Please select a file to upload');
+      return;
     }
+
+    setIsUploading(true);
+    submitSolution(
+      {
+        file: {
+          uri: file.uri,
+          type: file.type,
+          name: file.name,
+        },
+        assignmentId: assignment._id,
+      },
+      {
+        onSuccess: () => {
+          setIsUploading(false);
+          setModalVisible(false);
+          Toast.success('Solution submitted successfully');
+          setFile(undefined);
+        },
+        onError: error => {
+          setIsUploading(false);
+          Toast.error('Failed to submit solution');
+          console.error('Upload error:', error);
+        },
+      },
+    );
   };
 
   const styles = StyleSheet.create({
@@ -571,6 +620,11 @@ const SolutionUploadModal: FC<SolutionUploadModalProps> = ({
       alignItems: 'center',
       width: '90%',
       gap: 10,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 10,
     },
   });
 
@@ -590,7 +644,7 @@ const SolutionUploadModal: FC<SolutionUploadModalProps> = ({
               alignItems: 'center',
             }}>
             <Text style={{fontSize: 20, fontWeight: 'bold'}}>
-              Submit Assignment Solution
+              Submit Solution
             </Text>
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
@@ -604,184 +658,37 @@ const SolutionUploadModal: FC<SolutionUploadModalProps> = ({
           </View>
           <Divider />
 
-          <View style={{width: '100%', marginTop: 10}}>
-            <Text style={{marginBottom: 15}}>
-              Upload your solution file for this assignment.
-            </Text>
-            
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                width: '100%',
-              }}>
-              <CustomButton
-                title="Cancel"
-                onPress={() => setModalVisible(false)}
-                width={'45%'}
-                backgroundColor={Colors.danger}
-              />
+          <Text style={styles.title}>Assignment: {assignment.title}</Text>
 
-              {file ? (
-                <CustomButton
-                  title={isUploading ? 'Uploading...' : 'Submit Solution'}
-                  onPress={handleUpload}
-                  width={'45%'}
-                  disabled={isUploading}
-                />
-              ) : (
-                <UploaderButton
-                  file={file}
-                  setFile={setFile}
-                  setModalVisible={setModalVisible}
-                />
-              )}
-            </View>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-type ViewSolutionsModalProps = {
-  modalVisible: boolean;
-  setModalVisible: Dispatch<SetStateAction<boolean>>;
-  assignmentId: string;
-  assignmentTitle: string;
-};
-
-const ViewSolutionsModal: FC<ViewSolutionsModalProps> = ({
-  modalVisible,
-  setModalVisible,
-  assignmentId,
-  assignmentTitle,
-}) => {
-  const navigation = useNavigation();
-  const {data: solutions, isLoading} = useGetAssignmentSolutions(assignmentId);
-
-  const handleViewSolution = async (solution: any) => {
-    if (!solution.fileUrl) {
-      Alert.alert('Error', 'File URL not available');
-      return;
-    }
-
-    Toast.info('Preparing document...');
-    const result = await downloadFile(solution.fileUrl, `${solution.student?.fullName}-solution`);
-
-    if (result.success) {
-      navigation.navigate(Screens.PdfViewer, {
-        uri: result.filePath,
-        title: `${solution.student?.fullName}'s Solution`,
-      });
-    } else {
-      Toast.error('Failed to open document');
-    }
-  };
-
-  const styles = StyleSheet.create({
-    centeredView: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0,0,0,0.4)',
-    },
-    modalView: {
-      backgroundColor: 'white',
-      borderRadius: 10,
-      padding: 20,
-      width: '90%',
-      maxHeight: '80%',
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 15,
-    },
-    title: {
-      fontSize: 18,
-      fontWeight: 'bold',
-    },
-    solutionItem: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: Colors.lightGray,
-    },
-    studentInfo: {
-      flex: 1,
-    },
-    studentName: {
-      fontSize: 16,
-      fontWeight: 'bold',
-    },
-    submissionDate: {
-      color: Colors.gray,
-      fontSize: 12,
-    },
-    viewButton: {
-      backgroundColor: Colors.primary,
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 5,
-    },
-    viewButtonText: {
-      color: Colors.white,
-    },
-    emptyText: {
-      textAlign: 'center',
-      marginTop: 20,
-      color: Colors.gray,
-    },
-  });
-
-  return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={modalVisible}
-      onRequestClose={() => setModalVisible(false)}>
-      <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Solutions for {assignmentTitle}</Text>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <MaterialIcon name="close" size={24} color={Colors.black} />
-            </TouchableOpacity>
-          </View>
-          
-          <Divider />
-          
-          {isLoading ? (
-            <View style={{padding: 20, alignItems: 'center'}}>
-              <Text>Loading solutions...</Text>
-            </View>
-          ) : solutions?.length === 0 ? (
-            <Text style={styles.emptyText}>No solutions submitted yet</Text>
-          ) : (
-            <FlatList
-              data={solutions}
-              renderItem={({item}) => (
-                <View style={styles.solutionItem}>
-                  <View style={styles.studentInfo}>
-                    <Text style={styles.studentName}>{item.student?.fullName}</Text>
-                    <Text style={styles.submissionDate}>
-                      Submitted: {new Date(item.createdAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.viewButton}
-                    onPress={() => handleViewSolution(item)}>
-                    <Text style={styles.viewButtonText}>View</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              keyExtractor={item => item._id}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              width: '100%',
+              marginTop: 10,
+            }}>
+            <CustomButton
+              title="Cancel"
+              onPress={() => setModalVisible(false)}
+              width={'45%'}
+              backgroundColor={Colors.danger}
             />
-          )}
+
+            {file ? (
+              <CustomButton
+                title={isUploading ? 'Submitting...' : 'Submit Solution'}
+                onPress={handleSubmit}
+                width={'45%'}
+                disabled={isUploading}
+              />
+            ) : (
+              <UploaderButton
+                file={file}
+                setFile={setFile}
+                setModalVisible={setModalVisible}
+              />
+            )}
+          </View>
         </View>
       </View>
     </Modal>

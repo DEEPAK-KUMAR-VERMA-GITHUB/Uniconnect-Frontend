@@ -207,6 +207,8 @@ const NoteCard: FC<NoteCardProps> = ({
 
     Toast.info('Preparing document...');
     const result = await downloadFile(fileUrl, title);
+    console.log(result);
+    
 
     if (result.success) {
       navigation.navigate(Screens.PdfViewer, {

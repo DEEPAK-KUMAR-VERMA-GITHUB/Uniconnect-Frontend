@@ -5,9 +5,9 @@ import {
   useQuery,
   UseQueryOptions,
 } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
-import { EventRegister } from 'react-native-event-listeners';
-import { api } from './api';
+import {AxiosError} from 'axios';
+import {EventRegister} from 'react-native-event-listeners';
+import {api} from './api';
 
 // Create a custom event listener for loading state
 export const LOADING_EVENT = 'loading-state-changed';
@@ -46,7 +46,10 @@ export const apiHooks = {
   // Query hook for GET requests
   useGet: <TData = unknown, TTransformed = TData>(
     endpoint: string,
-    options?: Omit<UseQueryOptions<TData, AxiosError, TTransformed>, 'queryKey' | 'queryFn'>,
+    options?: Omit<
+      UseQueryOptions<TData, AxiosError, TTransformed>,
+      'queryKey' | 'queryFn'
+    >,
   ) => {
     return useQuery<TData, AxiosError, TTransformed>({
       queryKey: [endpoint],
@@ -67,7 +70,7 @@ export const apiHooks = {
     >,
   ) => {
     return useMutation<ApiResponse<TData>, AxiosError, TVariables>({
-      mutationFn: async (variables) => {
+      mutationFn: async variables => {
         const {data} = await api.post(endpoint, variables);
         return data;
       },
@@ -84,8 +87,27 @@ export const apiHooks = {
     >,
   ) => {
     return useMutation<ApiResponse<TData>, AxiosError, TVariables>({
-      mutationFn: async (variables) => {
+      mutationFn: async variables => {
         const {data} = await api.put(endpoint, variables);
+        return data;
+      },
+      ...options,
+    });
+  },
+
+  // Mutation hook for PATCH requests
+  usePatch: <TData = unknown, TVariables = unknown>(
+    endpoint: string | ((variables: TVariables) => string),
+    options?: Omit<
+      UseMutationOptions<ApiResponse<TData>, AxiosError, TVariables>,
+      'mutationFn'
+    >,
+  ) => {
+    return useMutation<ApiResponse<TData>, AxiosError, TVariables>({
+      mutationFn: async variables => {
+        const url =
+          typeof endpoint === 'function' ? endpoint(variables) : endpoint;
+        const {data} = await api.patch(url, variables);
         return data;
       },
       ...options,
@@ -101,7 +123,7 @@ export const apiHooks = {
     >,
   ) => {
     return useMutation<ApiResponse<TData>, AxiosError, string>({
-      mutationFn: async (id) => {
+      mutationFn: async id => {
         const {data} = await api.delete(`${endpoint}/${id}`);
         return data;
       },

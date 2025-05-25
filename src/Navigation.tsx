@@ -22,6 +22,8 @@ import {SubjectNotesScreen} from './screens/SubjectNotesScreen';
 import {useAuth} from './store/contexts/AuthContext';
 import {PdfViewerScreen} from './screens/PdfViewerScreen';
 import {SubjectPYQsScreen} from './screens/SubjectPYQsScreen';
+import {SubjectAssignmentsScreen} from './screens/SubjectAssignmentsScreen';
+import {AssignmentSubmissionsScreen} from './screens/AssignmentSubmissionsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -49,20 +51,28 @@ export const SignedInNavigation: FC = () => {
         name={Screens.AssignmentSubmit}
         component={AssignmentSubmitScreen}
       />
-
       {user?.role === 'faculty' ? (
         <Tab.Screen name={Screens.Profile} component={FacultyProfileScreen} />
       ) : (
         <Tab.Screen name={Screens.Profile} component={StudentProfileScreen} />
       )}
-
       <Stack.Screen
         name={Screens.SubjectNotes}
         component={SubjectNotesScreen}
       />
       <Stack.Screen name={Screens.SubjectPYQs} component={SubjectPYQsScreen} />
-
       <Stack.Screen name={Screens.PdfViewer} component={PdfViewerScreen} />
+
+      <Stack.Screen
+        name={Screens.SubjectAssignments}
+        component={SubjectAssignmentsScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name={Screens.AssignmentSubmissions}
+        component={AssignmentSubmissionsScreen}
+        options={{headerShown: false}}
+      />
     </Tab.Navigator>
   );
 };

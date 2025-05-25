@@ -51,6 +51,8 @@ export const Screens = Object.freeze({
   AssignmentSubmit: 'AssignmentSubmitScreen',
   SubjectNotes: 'SubjectNotes',
   SubjectPYQs: 'SubjectPYQsScreen',
+  SubjectAssignments: 'SubjectAssignments',
+  AssignmentSubmissions: 'AssignmentSubmissions',
   PdfViewer: 'PdfViewer',
 });
 
