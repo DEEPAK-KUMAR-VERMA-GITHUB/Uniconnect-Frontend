@@ -47,9 +47,21 @@ const uploadResource = async ({
   return response.data;
 };
 
-const getRources = async (subjectId?: string, type?: string) => {
+const getRources = async (
+  subjectId?: string,
+  type?: string,
+  facultyId?: string,
+) => {
   if (!subjectId) return [];
-  const response = await api.get(`/subjects/${subjectId}/resources`);
+
+  let response;
+  if (facultyId) {
+    response = await api.get(
+      `/subjects/${subjectId}/resources?facultyId=${facultyId}`,
+    );
+  } else {
+    response = await api.get(`/subjects/${subjectId}/resources`);
+  }
   return response.data.data.resources.filter(
     (resource: any) => resource.type === type,
   );

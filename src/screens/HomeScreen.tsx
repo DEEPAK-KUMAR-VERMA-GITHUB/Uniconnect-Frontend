@@ -1,6 +1,6 @@
 // src/screens/HomeScreen.js with pull-to-refresh functionality
 import {useNavigation} from '@react-navigation/native';
-import {FC, useCallback, useState} from 'react';
+import {FC, useCallback, useEffect, useState} from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -22,6 +22,7 @@ import {LoadingScreen} from './LoadingScreen';
 import {useTheme} from '../store/contexts/ThemeContext';
 import {useRefresh} from '../utils/useRefresh';
 import Toast from '../components/Toast';
+import {formatNotificationTime} from '../utils/helper';
 
 export const HomeScreen: FC = () => {
   const {user, isLoading} = useAuth();
@@ -29,78 +30,67 @@ export const HomeScreen: FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const {refreshAllData} = useRefresh();
 
+  const [assignmentData, setAssignmentData] = useState([]);
+  const [noteData, setNoteData] = useState([]);
+  const [pyqData, setPyqData] = useState([]);
+  console.log(user);
+
+  useEffect(() => {
+    const {assignments, notes, pyqs} = user?.teachingAssignments;
+    if (assignments) {
+      setAssignmentData(assignments);
+    }
+    if (notes) {
+      setNoteData(notes);
+    }
+    if (pyqs) {
+      setPyqData(pyqs);
+    }
+  }, [user]);
+
   const sections = [
     {
       title: 'Recent Assignments',
       link: 'View All',
-      data: [
-        {
-          title: 'Assignment 1',
-          subtitle: 'Due Date: 12/12/2021',
+      data: assignmentData.map(assignment => {
+        return {
+          title: assignment.title,
+          subtitle: `Due Date: ${formatNotificationTime(assignment.dueDate)}`,
           icon: 'assignment',
-          status: 'In Progress',
-        },
-        {
-          title: 'Assignment 2',
-          subtitle: 'Due Date: 15/12/2021',
-          icon: 'assignment',
-          status: 'In Progress',
-        },
-        {
-          title: 'Assignment 3',
-          subtitle: 'Due Date: 18/12/2021',
-          icon: 'assignment',
-          status: 'In Progress',
-        },
-      ],
+          status: assignment.status,
+        };
+      }),
+      handleClick: () => {
+        navigation.navigate(Screens.Assignments as never);
+      },
     },
     {
       title: 'Recent Notes',
       link: 'View All',
-      data: [
-        {
-          title: 'Note 1',
-          subtitle: 'Subject: Math',
+      data: noteData.map(note => {
+        return {
+          title: note.title,
+          subtitle: `Subject: ${note.subject.name} ${note.subject.code}`,
           icon: 'description',
-          status: 'N/A',
-        },
-        {
-          title: 'Note 2',
-          subtitle: 'Subject: Science',
-          icon: 'description',
-          status: 'N/A',
-        },
-        {
-          title: 'Note 3',
-          subtitle: 'Subject: History',
-          icon: 'description',
-          status: 'N/A',
-        },
-      ],
+        };
+      }),
+      handleClick: () => {
+        navigation.navigate(Screens.Notes as never);
+      },
     },
     {
       title: 'Recent PYQs',
       link: 'View All',
-      data: [
-        {
-          title: 'PYQ 2020',
-          subtitle: 'Subject: Physics',
+      data: pyqData.map(pyq => {
+        return {
+          title: pyq.title,
+          subtitle: `Subject: ${pyq.subject.name} ${pyq.subject.code}`,
           icon: 'book',
-          status: 'N/A',
-        },
-        {
-          title: 'PYQ 2019',
-          subtitle: 'Subject: Chemistry',
-          icon: 'book',
-          status: 'N/A',
-        },
-        {
-          title: 'PYQ 2018',
-          subtitle: 'Subject: Biology',
-          icon: 'book',
-          status: 'N/A',
-        },
-      ],
+        };
+      }),
+      handleClick: () => {
+        navigation.navigate(Screens.PYQs as never);
+      },
     },
   ];
 
@@ -109,7 +99,7 @@ export const HomeScreen: FC = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refreshAllData({showToast: false});
+      refreshAllData({showToast: false});
       Toast.success('Data refreshed successfully');
     } catch (error) {
       Toast.error('Failed to refresh data');
@@ -120,7 +110,10 @@ export const HomeScreen: FC = () => {
   }, [refreshAllData]);
 
   const renderSection = ({item}: {item: (typeof sections)[0]}) => (
-    <CustomSection title={item.title} link={item.link}>
+    <CustomSection
+      title={item.title}
+      link={item.link}
+      handleClick={item.handleClick}>
       <FlatList
         data={item.data}
         renderItem={({item: sectionItem}) => (
@@ -129,11 +122,22 @@ export const HomeScreen: FC = () => {
             itemTitle={sectionItem.title}
             itemSubtitle={sectionItem.subtitle}
             itemStatus={sectionItem.status}
-            itemStatusBorderRadius={20}
+            itemStatusBorderRadius={50}
           />
         )}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={{alignItems: 'center'}}
+        ListEmptyComponent={
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: 100,
+            }}>
+            <Text style={{color: colors.textSecondary}}>No data found</Text>
+          </View>
+        }
       />
     </CustomSection>
   );
@@ -197,15 +201,15 @@ const Header: FC<{navigation: any; user: User | null}> = ({
     textTitle: {
       fontSize: 30,
       fontWeight: 'bold',
-      color: colors.text,
+      color: colors.card,
     },
     textSubtitle: {
       fontSize: 18,
-      color: colors.text,
+      color: colors.card,
     },
     iconContainer: {
       padding: 10,
-      backgroundColor: colors.text,
+      backgroundColor: colors.card,
       borderRadius: 100,
       elevation: 5,
     },

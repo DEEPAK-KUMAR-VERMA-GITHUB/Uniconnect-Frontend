@@ -94,7 +94,6 @@ api.interceptors.response.use(
 
       // Store tokens from response body
       const data = response.data?.data;
-      console.log('Response dddd ', data);
 
       if (data) {
         if (data.accessToken) {

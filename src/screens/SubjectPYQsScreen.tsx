@@ -5,6 +5,7 @@ import {
   Alert,
   FlatList,
   Modal,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -41,6 +42,13 @@ export const SubjectPYQsScreen: FC = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const {data: pyqs, isLoading, refetch} = useGetResource(subject._id, 'pyq');
   const {mutate: deletePYQ} = useDeleteResource();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    refetch();
+    setRefreshing(false);
+  };
 
   const handleDeletePYQ = (pyqId: string) => {
     deletePYQ(
@@ -93,6 +101,9 @@ export const SubjectPYQsScreen: FC = () => {
           )}
           keyExtractor={item => item._id}
           contentContainerStyle={{padding: 10, gap: 10}}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
         />
       )}
 
@@ -382,9 +393,7 @@ const UploadModal: FC<UploadModalProps> = ({
               width: '100%',
               alignItems: 'center',
             }}>
-            <Text style={{fontSize: 20, fontWeight: 'bold'}}>
-              Upload PYQ
-            </Text>
+            <Text style={{fontSize: 20, fontWeight: 'bold'}}>Upload PYQ</Text>
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
               style={{

@@ -54,9 +54,7 @@ export const SubjectAssignmentsScreen: FC = () => {
     data: assignments,
     refetch,
     isLoading,
-  } = useGetAssignments(subject._id, subject.facultyId);
-
-  console.log(assignments);
+  } = useGetAssignments(subject._id, subject.faculty._id);
 
   const [refreshing, setRefreshing] = useState(false);
   const {refreshUserProfile} = useRefresh();

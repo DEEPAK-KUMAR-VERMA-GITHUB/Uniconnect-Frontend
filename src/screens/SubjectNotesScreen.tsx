@@ -40,7 +40,11 @@ export const SubjectNotesScreen: FC = () => {
   const {subject} = route.params;
   const {user} = useAuth();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const {data: notes, isLoading, refetch} = useGetResource(subject._id, 'note');
+  const {
+    data: notes,
+    isLoading,
+    refetch,
+  } = useGetResource(subject._id, 'note', subject.faculty._id);
   const {mutate: deleteNote} = useDeleteResource();
 
   const handleDeleteNote = (noteId: string) => {
@@ -208,7 +212,6 @@ const NoteCard: FC<NoteCardProps> = ({
     Toast.info('Preparing document...');
     const result = await downloadFile(fileUrl, title);
     console.log(result);
-    
 
     if (result.success) {
       navigation.navigate(Screens.PdfViewer, {
