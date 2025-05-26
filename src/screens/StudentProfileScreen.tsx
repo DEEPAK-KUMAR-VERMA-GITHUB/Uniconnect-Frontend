@@ -218,7 +218,7 @@ export const StudentProfileScreen: FC = () => {
               <TextInput
                 style={styles.detailItemValue}
                 editable={false}
-                value="CS2023-0456"
+                value={user?.rollNumber}
               />
             </View>
             <View style={styles.detailItemContents}>
@@ -226,7 +226,7 @@ export const StudentProfileScreen: FC = () => {
               <TextInput
                 style={styles.detailItemValue}
                 editable={false}
-                value="2023-2025"
+                value={user?.associations.sessions[0].name}
               />
             </View>
           </View>
@@ -237,7 +237,7 @@ export const StudentProfileScreen: FC = () => {
               <TextInput
                 style={styles.detailItemValue}
                 editable={false}
-                value="Computer Science & Engineering"
+                value={user?.associations.courses[0].name}
               />
             </View>
           </View>
@@ -248,7 +248,7 @@ export const StudentProfileScreen: FC = () => {
               <TextInput
                 style={styles.detailItemValue}
                 editable={false}
-                value="4th Semester"
+                value={user?.associations.semesters[0].semesterName}
               />
             </View>
             <View style={styles.detailItemContents}>

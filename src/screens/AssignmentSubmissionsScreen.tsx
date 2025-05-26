@@ -1,6 +1,7 @@
-import {FC} from 'react';
+import {FC, useState} from 'react';
 import {
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -8,20 +9,31 @@ import {
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
-import {
-  CustomSafeAreaView,
-  TabHeader,
-} from '../components/GlobalComponents';
+import {CustomSafeAreaView, TabHeader} from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
 import {useGetAssignmentSubmissions} from '../store/apis/assignments';
 import {downloadFile} from '../utils/fileUtils';
 import Toast from '../components/Toast';
+import {formatNotificationTime} from '../utils/helper';
 
 export const AssignmentSubmissionsScreen: FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const [isRefreshing, setIsRefresing] = useState<boolean>(false);
   const {assignment, subjectName} = route.params;
-  const {data: submissions, isLoading} = useGetAssignmentSubmissions(assignment._id);
+  const {
+    data: submissions,
+    isLoading,
+    refetch,
+  } = useGetAssignmentSubmissions(assignment._id);
+
+  console.log(submissions);
+
+  const handleRefresh = async () => {
+    setIsRefresing(true);
+    await refetch();
+    setIsRefresing(false);
+  };
 
   return (
     <CustomSafeAreaView
@@ -47,13 +59,21 @@ export const AssignmentSubmissionsScreen: FC = () => {
           renderItem={({item}) => (
             <SubmissionCard
               studentName={item.student?.fullName || 'Student'}
-              submittedDate={new Date(item.createdAt).toLocaleDateString()}
+              submittedDate={formatNotificationTime(item.updatedAt)}
+              rollNumber={item.student.rollNumber}
+              email={item.student.email}
               fileUrl={item.fileUrl}
               navigation={navigation}
             />
           )}
           keyExtractor={item => item._id}
           contentContainerStyle={{padding: 10, gap: 10}}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+            />
+          }
         />
       )}
     </CustomSafeAreaView>
@@ -65,6 +85,8 @@ type SubmissionCardProps = {
   submittedDate: string;
   fileUrl: string;
   navigation: any;
+  rollNumber: string;
+  email: string;
 };
 
 const SubmissionCard: FC<SubmissionCardProps> = ({
@@ -72,6 +94,8 @@ const SubmissionCard: FC<SubmissionCardProps> = ({
   submittedDate,
   fileUrl,
   navigation,
+  rollNumber,
+  email,
 }) => {
   const styles = StyleSheet.create({
     container: {
@@ -123,10 +147,13 @@ const SubmissionCard: FC<SubmissionCardProps> = ({
     const result = await downloadFile(fileUrl, `${studentName}_submission`);
 
     if (result.success) {
-      navigation.navigate(Screens.PdfViewer as never, {
-        uri: result.filePath,
-        title: `${studentName}'s Submission`,
-      } as never);
+      navigation.navigate(
+        Screens.PdfViewer as never,
+        {
+          uri: result.filePath,
+          title: `${studentName}'s Submission`,
+        } as never,
+      );
     } else {
       Toast.error('Failed to open document');
     }
@@ -136,6 +163,10 @@ const SubmissionCard: FC<SubmissionCardProps> = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{studentName}</Text>
+      </View>
+      <View style={{marginTop: 5}}>
+        <Text>Roll Number: {rollNumber}</Text>
+        <Text>Email: {email}</Text>
       </View>
       <View style={styles.info}>
         <Text style={styles.date}>Submitted: {submittedDate}</Text>

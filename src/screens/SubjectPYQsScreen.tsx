@@ -40,7 +40,15 @@ export const SubjectPYQsScreen: FC = () => {
   const {subject} = route.params;
   const {user} = useAuth();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const {data: pyqs, isLoading, refetch} = useGetResource(subject._id, 'pyq');
+  const {
+    data: pyqs,
+    isLoading,
+    refetch,
+  } = useGetResource(
+    subject._id,
+    'pyq',
+    user?.role === 'faculty' ? subject.faculty._id : undefined,
+  );
   const {mutate: deletePYQ} = useDeleteResource();
   const [refreshing, setRefreshing] = useState<boolean>(false);
 

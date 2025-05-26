@@ -234,7 +234,7 @@ export const AuthProvider: FC<{children: ReactNode}> = ({children}) => {
           });
 
           console.log('Authentication response:', response.data);
-          const user = response.data?.data 
+          const user = response.data?.data;
 
           if (user) {
             console.log('User is authenticated');
@@ -312,6 +312,14 @@ export const AuthProvider: FC<{children: ReactNode}> = ({children}) => {
         // Reset refresh tracking
         refreshInProgress.current = false;
         lastRefreshTime.current = 0;
+
+        const userData = await api.get('/users/me', {
+          headers: {
+            'X-Device-ID': deviceId,
+          },
+        });
+
+        user = userData?.data.data;
 
         setAuthState({
           user,

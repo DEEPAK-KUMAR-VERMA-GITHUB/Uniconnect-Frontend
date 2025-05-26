@@ -40,11 +40,17 @@ export const SubjectNotesScreen: FC = () => {
   const {subject} = route.params;
   const {user} = useAuth();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+
   const {
     data: notes,
     isLoading,
     refetch,
-  } = useGetResource(subject._id, 'note', subject.faculty._id);
+  } = useGetResource(
+    subject._id,
+    'note',
+    user?.role === 'student' ? undefined : subject.faculty._id,
+  );
+  
   const {mutate: deleteNote} = useDeleteResource();
 
   const handleDeleteNote = (noteId: string) => {

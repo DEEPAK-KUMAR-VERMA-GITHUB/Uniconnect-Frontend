@@ -85,10 +85,14 @@ export const useUploadResource = () => {
   });
 };
 
-export const useGetResource = (subjectId?: string, type?: 'note' | 'pyq') => {
+export const useGetResource = (
+  subjectId?: string,
+  type?: 'note' | 'pyq',
+  facultyId?: string,
+) => {
   return useQuery({
-    queryKey: ['resources', subjectId, type],
-    queryFn: () => getRources(subjectId, type),
+    queryKey: ['resources', subjectId, type, facultyId],
+    queryFn: () => getRources(subjectId, type, facultyId),
     enabled: !!subjectId,
   });
 };

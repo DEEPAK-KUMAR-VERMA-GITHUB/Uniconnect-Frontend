@@ -13,15 +13,17 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {CustomSafeAreaView, TabHeader} from '../components/GlobalComponents';
 import {Colors, Screens} from '../constants/Constants';
 import {useFacultySubjects} from '../store/apis/subjects';
-import {useAuth} from '../store/contexts/AuthContext';
+import {useAuth, User} from '../store/contexts/AuthContext';
 import Toast from '../components/Toast';
 import {useRefresh} from '../utils/useRefresh';
 
 export const AssignmentScreen: FC = () => {
   const navigation = useNavigation();
-  const {user} = useAuth();
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const {data: subjects, isLoading} = useFacultySubjects(user?._id);
+  const {user, isLoading} = useAuth();
+  const subjects =
+    user?.role === 'faculty'
+      ? useFacultySubjects(user?._id).data
+      : user?.associations.subjects;
 
   const [refreshing, setRefreshing] = useState(false);
   const {refreshUserProfile} = useRefresh();
@@ -57,7 +59,7 @@ export const AssignmentScreen: FC = () => {
         <FlatList
           data={subjects}
           renderItem={({item}) => (
-            <SubjectCard subject={item} navigation={navigation} />
+            <SubjectCard subject={item} navigation={navigation} user={user} />
           )}
           keyExtractor={item => item._id}
           contentContainerStyle={{padding: 10, gap: 10}}
@@ -78,9 +80,10 @@ export const AssignmentScreen: FC = () => {
 type SubjectCardProps = {
   subject: any;
   navigation: any;
+  user: User | null;
 };
 
-const SubjectCard: FC<SubjectCardProps> = ({subject, navigation}) => {
+const SubjectCard: FC<SubjectCardProps> = ({subject, navigation, user}) => {
   const styles = StyleSheet.create({
     container: {
       backgroundColor: Colors.white,
@@ -128,17 +131,24 @@ const SubjectCard: FC<SubjectCardProps> = ({subject, navigation}) => {
         </View>
       </View>
 
-      <View style={styles.info}>
-        <Text style={styles.infoText}>
-          Course: {subject.course?.name || 'N/A'}
-        </Text>
-        <Text style={styles.infoText}>
-          Semester: {subject.semester?.semesterName || 'N/A'}
-        </Text>
-        <Text style={styles.infoText}>
-          Faculty: {subject.faculty?.fullName || 'Not Assigned'}
-        </Text>
-      </View>
+      {user?.role === 'student' ? (
+        <View style={styles.info}>
+          <Text style={styles.infoText}>Code: {subject.code}</Text>
+          <Text style={styles.infoText}>Credits: {subject.credits}</Text>
+        </View>
+      ) : (
+        <View style={styles.info}>
+          <Text style={styles.infoText}>
+            Course: {subject.course?.name || 'N/A'}
+          </Text>
+          <Text style={styles.infoText}>
+            Semester: {subject.semester?.semesterName || 'N/A'}
+          </Text>
+          <Text style={styles.infoText}>
+            Faculty: {subject.faculty?.fullName || 'Not Assigned'}
+          </Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };

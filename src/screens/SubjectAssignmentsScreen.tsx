@@ -35,6 +35,7 @@ import {
   useGetAssignments,
   useUploadAssignment,
   useDeleteAssignment,
+  useSubmitAssignmentSolution,
 } from '../store/apis/assignments';
 import Toast from '../components/Toast';
 import {downloadFile} from '../utils/fileUtils';
@@ -54,7 +55,10 @@ export const SubjectAssignmentsScreen: FC = () => {
     data: assignments,
     refetch,
     isLoading,
-  } = useGetAssignments(subject._id, subject.faculty._id);
+  } = useGetAssignments(
+    subject._id,
+    user?.role === 'faculty' ? subject.faculty._id : undefined,
+  );
 
   const [refreshing, setRefreshing] = useState(false);
   const {refreshUserProfile} = useRefresh();
@@ -350,7 +354,11 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
               style={[styles.actionButton, styles.submitBtn]}
               onPress={onSubmit}>
               <Text style={styles.actionText}>Submit</Text>
-              <MaterialIcon name="upload-file" size={20} color={Colors.white} />
+              <MaterialIcon
+                name="upload-file"
+                size={20}
+                color={Colors.primary}
+              />
             </TouchableOpacity>
           )}
 
@@ -712,7 +720,7 @@ const SubmissionModal: FC<SubmissionModalProps> = ({
 
             {file ? (
               <CustomButton
-                title={isUploading ? 'Submitting...' : 'Submit Solution'}
+                title={isUploading ? 'Submitting...' : 'Submit'}
                 onPress={handleSubmit}
                 width={'45%'}
                 disabled={isUploading}

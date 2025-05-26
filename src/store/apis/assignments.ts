@@ -71,11 +71,15 @@ export const useSubmitAssignmentSolution = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      return api.post(`/assignments/${assignmentId}/submit`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      return api.post(
+        `/assignments/${assignmentId}/submit-solution`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         },
-      });
+      );
     },
   });
 };
