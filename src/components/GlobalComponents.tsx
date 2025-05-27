@@ -536,11 +536,11 @@ const CustomSectionItems: FC<CustomSectionItemsProps> = ({
           <View
             style={{
               backgroundColor: `${
-                itemStatus === 'pending'
+                itemStatus === 'graded'
                   ? Colors.primary
-                  : itemStatus === 'graded'
-                  ? Colors.green
                   : itemStatus === 'submitted'
+                  ? Colors.green
+                  : itemStatus === 'pending'
                   ? Colors.secondary
                   : Colors.transparent
               }`,

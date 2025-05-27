@@ -53,11 +53,16 @@ export const HomeScreen: FC = () => {
       title: 'Recent Assignments',
       link: 'View All',
       data: assignmentData.map(assignment => {
+        // Check if the assignment has a submission from the current user
+        const isCompleted = assignment.submissions?.some(
+          submission => submission.student === user?._id,
+        );
+
         return {
           title: assignment.title,
           subtitle: `Due Date: ${formatNotificationTime(assignment.dueDate)}`,
           icon: 'assignment',
-          status: assignment.status,
+          status: isCompleted ? 'submitted' : 'pending',
         };
       }),
       handleClick: () => {
@@ -122,7 +127,7 @@ export const HomeScreen: FC = () => {
             itemTitle={sectionItem.title}
             itemSubtitle={sectionItem.subtitle}
             itemStatus={sectionItem.status}
-            itemStatusBorderRadius={50}
+            itemStatusBorderRadius={80}
           />
         )}
         keyExtractor={(item, index) => index.toString()}

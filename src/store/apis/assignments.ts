@@ -83,3 +83,13 @@ export const useSubmitAssignmentSolution = () => {
     },
   });
 };
+
+export const useGetStudentSubmissions = () => {
+  return useQuery({
+    queryKey: ['studentSubmissions'],
+    queryFn: async () => {
+      const response = await api.get('/assignments/student-submissions');
+      return response.data.data;
+    },
+  });
+};

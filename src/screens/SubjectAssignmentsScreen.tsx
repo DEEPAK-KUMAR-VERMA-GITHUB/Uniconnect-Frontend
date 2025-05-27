@@ -36,6 +36,7 @@ import {
   useUploadAssignment,
   useDeleteAssignment,
   useSubmitAssignmentSolution,
+  useGetStudentSubmissions,
 } from '../store/apis/assignments';
 import Toast from '../components/Toast';
 import {downloadFile} from '../utils/fileUtils';
@@ -62,6 +63,37 @@ export const SubjectAssignmentsScreen: FC = () => {
 
   const [refreshing, setRefreshing] = useState(false);
   const {refreshUserProfile} = useRefresh();
+
+  const {data: studentSubmissions} = useGetStudentSubmissions();
+
+  const getStudentSubmission = (assignmentId: string) => {
+    if (!studentSubmissions || user?.role !== 'student') return null;
+    return studentSubmissions.find(
+      sub => sub.assignment._id.toString() === assignmentId.toString(),
+    );
+  };
+
+  const handleViewStudentSubmission = (fileUrl: string) => {
+    if (!fileUrl) {
+      Toast.error('Submission file not available');
+      return;
+    }
+
+    Toast.info('Preparing document...');
+    downloadFile(fileUrl, 'my_submission').then(result => {
+      if (result.success) {
+        navigation.navigate(
+          Screens.PdfViewer as never,
+          {
+            uri: result.filePath,
+            title: 'My Submission',
+          } as never,
+        );
+      } else {
+        Toast.error('Failed to open document');
+      }
+    });
+  };
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -129,23 +161,31 @@ export const SubjectAssignmentsScreen: FC = () => {
       ) : (
         <FlatList
           data={assignments}
-          renderItem={({item}) => (
-            <AssignmentCard
-              title={item.title}
-              dueDate={new Date(item.dueDate).toLocaleDateString()}
-              uploadedDate={new Date(item.assignedAt).toLocaleDateString()}
-              facultyName={item.assignedBy?.fullName || 'Faculty'}
-              fileUrl={item.file}
-              navigation={navigation}
-              canDelete={user?.role === 'faculty'}
-              canSubmit={user?.role === 'student'}
-              canViewSubmissions={user?.role === 'faculty'}
-              assignmentId={item._id}
-              onDelete={() => handleDeleteAssignment(item._id)}
-              onSubmit={() => handleSubmitSolution(item)}
-              onViewSubmissions={() => handleViewSubmissions(item)}
-            />
-          )}
+          renderItem={({item}) => {
+            const submission = getStudentSubmission(item._id);
+            return (
+              <AssignmentCard
+                title={item.title}
+                dueDate={new Date(item.dueDate).toLocaleDateString()}
+                uploadedDate={new Date(item.assignedAt).toLocaleDateString()}
+                facultyName={item.assignedBy?.fullName || 'Faculty'}
+                fileUrl={item.file}
+                navigation={navigation}
+                canDelete={user?.role === 'faculty'}
+                canSubmit={user?.role === 'student' && !submission}
+                hasSubmitted={!!submission}
+                submissionFileUrl={submission?.fileUrl}
+                canViewSubmissions={user?.role === 'faculty'}
+                assignmentId={item._id}
+                onDelete={() => handleDeleteAssignment(item._id)}
+                onSubmit={() => handleSubmitSolution(item)}
+                onViewSubmissions={() => handleViewSubmissions(item)}
+                onViewStudentSubmission={() =>
+                  handleViewStudentSubmission(submission?.fileUrl)
+                }
+              />
+            );
+          }}
           keyExtractor={item => item._id}
           contentContainerStyle={{padding: 10, gap: 10}}
           refreshControl={
@@ -191,10 +231,14 @@ type AssignmentCardProps = {
   canDelete?: boolean;
   canSubmit?: boolean;
   canViewSubmissions?: boolean;
+  hasSubmitted?: boolean;
+  submissionFileUrl?: string;
   assignmentId?: string;
   onDelete?: () => void;
   onSubmit?: () => void;
   onViewSubmissions?: () => void;
+  onViewSubmission?: () => void;
+  onViewStudentSubmission?: () => void;
 };
 
 const AssignmentCard: FC<AssignmentCardProps> = ({
@@ -211,6 +255,10 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
   onDelete,
   onSubmit,
   onViewSubmissions,
+  hasSubmitted,
+  submissionFileUrl,
+  onViewSubmission,
+  onViewStudentSubmission,
 }) => {
   const styles = StyleSheet.create({
     container: {
@@ -284,6 +332,9 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
     actionText: {
       color: Colors.white,
     },
+    viewSubmissionBtn: {
+      backgroundColor: Colors.info,
+    },
   });
 
   const handleViewPdf = async () => {
@@ -339,6 +390,11 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
           <Text style={styles.dueDate}>Due: {dueDate}</Text>
           <Text style={styles.date}>Uploaded: {uploadedDate}</Text>
           <Text style={styles.faculty}>Faculty: {facultyName}</Text>
+          {hasSubmitted && (
+            <Text style={{color: Colors.green, fontWeight: 'bold'}}>
+              Status: Completed
+            </Text>
+          )}
         </View>
         <View style={styles.actions}>
           {canDelete && (
@@ -354,11 +410,15 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
               style={[styles.actionButton, styles.submitBtn]}
               onPress={onSubmit}>
               <Text style={styles.actionText}>Submit</Text>
-              <MaterialIcon
-                name="upload-file"
-                size={20}
-                color={Colors.primary}
-              />
+              <MaterialIcon name="upload-file" size={20} color={Colors.white} />
+            </TouchableOpacity>
+          )}
+
+          {hasSubmitted && submissionFileUrl && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.viewSubmissionBtn]}
+              onPress={onViewStudentSubmission}>
+              <MaterialIcon name="description" size={20} color={Colors.white} />
             </TouchableOpacity>
           )}
 
@@ -366,7 +426,7 @@ const AssignmentCard: FC<AssignmentCardProps> = ({
             <TouchableOpacity
               style={[styles.actionButton, styles.viewBtn]}
               onPress={onViewSubmissions}>
-              <MaterialIcon name="list" size={20} color={Colors.black} />
+              <MaterialIcon name="list" size={20} color={Colors.white} />
             </TouchableOpacity>
           )}
 

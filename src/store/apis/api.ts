@@ -94,7 +94,6 @@ api.interceptors.response.use(
 
       // Store tokens from response body
       const data = response.data?.data;
-      console.log(data);
 
       if (data) {
         if (data.accessToken) {
@@ -117,7 +116,10 @@ api.interceptors.response.use(
       console.error('Error processing response:', error);
     }
 
-    console.log(`✅ Response: ${response.status} ${response.config.url}`);
+    console.log(
+      `✅ Response: ${response.status} ${response.config.url}`,
+      response,
+    );
     return response;
   },
   error => {
